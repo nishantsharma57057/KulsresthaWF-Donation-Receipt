@@ -1,0 +1,6 @@
+{
+  "name": "Kulshrestha Welfare Foundation - Donation Management System",
+  "description": "Enterprise donation management portal with instant receipt generation, 80G tax receipts, automated WhatsApp & email dispatch, and real-time Google Sheets sync.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

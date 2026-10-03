@@ -1,0 +1,149 @@
+{
+  "entities": {
+    "Donation": {
+      "title": "Donation",
+      "description": "Represents a charitable donation contribution and 80G tax receipt record.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the donation record."
+        },
+        "receiptNo": {
+          "type": "string",
+          "description": "Official 80G Tax Exemption Receipt Number."
+        },
+        "date": {
+          "type": "string",
+          "description": "Donation date in YYYY-MM-DD or DD MMM YYYY format."
+        },
+        "time": {
+          "type": "string",
+          "description": "Donation receipt generation time."
+        },
+        "donorName": {
+          "type": "string",
+          "description": "Full legal name of the donor."
+        },
+        "donorPhone": {
+          "type": "string",
+          "description": "Primary mobile number of the donor."
+        },
+        "donorEmail": {
+          "type": "string",
+          "description": "Email address of the donor."
+        },
+        "donorPan": {
+          "type": "string",
+          "description": "Indian Permanent Account Number (PAN) of the donor."
+        },
+        "donorAddress": {
+          "type": "string",
+          "description": "Residential or organization street address."
+        },
+        "donorCity": {
+          "type": "string",
+          "description": "City of residence."
+        },
+        "donorState": {
+          "type": "string",
+          "description": "State or union territory."
+        },
+        "donorPincode": {
+          "type": "string",
+          "description": "Postal pincode."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Contribution amount in INR."
+        },
+        "amountInWords": {
+          "type": "string",
+          "description": "Indian numbering format words equivalent of the amount."
+        },
+        "cause": {
+          "type": "string",
+          "description": "Designated welfare project or purpose."
+        },
+        "paymentMode": {
+          "type": "string",
+          "description": "Mode of financial payment (e.g. UPI, Net Banking, Cash)."
+        },
+        "transactionId": {
+          "type": "string",
+          "description": "Bank transaction reference number."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Special dedication or administrative notes."
+        },
+        "emailStatus": {
+          "type": "string",
+          "enum": ["pending", "sent", "failed"]
+        },
+        "whatsappStatus": {
+          "type": "string",
+          "enum": ["pending", "sent", "failed"]
+        },
+        "googleSheetStatus": {
+          "type": "string",
+          "enum": ["pending", "synced", "failed"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of creation."
+        }
+      },
+      "required": ["id", "receiptNo", "donorName", "amount", "paymentMode", "date"]
+    },
+    "NgoSettings": {
+      "title": "NgoSettings",
+      "description": "Organization profile, 80G tax registration numbers, and integration settings.",
+      "type": "object",
+      "properties": {
+        "orgName": { "type": "string" },
+        "cin": { "type": "string" },
+        "pan": { "type": "string" },
+        "reg80GNumber": { "type": "string" },
+        "reg12ANumber": { "type": "string" },
+        "address": { "type": "string" },
+        "city": { "type": "string" },
+        "state": { "type": "string" },
+        "pincode": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "website": { "type": "string" }
+      },
+      "required": ["orgName", "pan", "reg80GNumber"]
+    },
+    "RegisteredUser": {
+      "title": "RegisteredUser",
+      "description": "Admin or staff team member account record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "username": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "staff"] },
+        "status": { "type": "string", "enum": ["main_admin", "approved", "pending"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "role"]
+    }
+  },
+  "firestore": {
+    "/donations/{donationId}": {
+      "schema": { "$ref": "Donation" },
+      "description": "Collection of all 80G donation records and tax receipts."
+    },
+    "/settings/{settingsId}": {
+      "schema": { "$ref": "NgoSettings" },
+      "description": "Global foundation profile and compliance credentials."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "RegisteredUser" },
+      "description": "Authorized staff and admin team member profiles."
+    }
+  }
+}
