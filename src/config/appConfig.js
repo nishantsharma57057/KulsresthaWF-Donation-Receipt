@@ -6,7 +6,7 @@
  * details are centralized in this single file.
  * 
  * In the future, if you change your Google Sheet, email provider, or admin details,
- * you can edit this single file without touching any complex component codeee!
+ * you can edit this single file without touching any complex component codeeeee!
  * ==============================================================================
  */
 
