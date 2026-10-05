@@ -30,7 +30,7 @@ export const APP_CONFIG = {
   // Replace this URL whenever you deploy a new Google Apps Script Web App!
   googleSheet: {
     // Current active Google Apps Script Web App Endpoint
-    webhookUrl: 'https://script.google.com/macros/s/AKfycbwPq-ExampleSheetWebhookKWF/exec',
+    webhookUrl: 'https://script.google.com/macros/s/AKfycbzZtwZ1sFaI3-rcDTBDpnSafg5TZNVTiquF3czUUBawqb7xTX53g0QOEA5UHM6Rl5m2Tg/exec',
     spreadsheetName: 'Donations_2026_27',
     sheetTabName: 'Donations_2026_27',
     autoSyncEnabled: true,
