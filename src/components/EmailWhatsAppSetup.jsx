@@ -159,6 +159,16 @@ function doPost(e) {
         name: "Kulshrestha Welfare Foundation"
       };
 
+      // Render the receipt-style HTML and embed the original logo/signature.
+      if (contents.htmlBody) mailOptions.htmlBody = contents.htmlBody;
+      if (contents.inlineImages) {
+        mailOptions.inlineImages = {};
+        Object.keys(contents.inlineImages).forEach(function(key) {
+          var image = contents.inlineImages[key];
+          mailOptions.inlineImages[key] = Utilities.newBlob(Utilities.base64Decode(image.data), image.mimeType || "image/png", key);
+        });
+      }
+
       // ATTACH THE PDF FILE
       if (contents.pdfBase64) {
         var decodedBytes = Utilities.base64Decode(contents.pdfBase64);

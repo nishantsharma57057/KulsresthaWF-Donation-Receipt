@@ -1,5 +1,6 @@
 import { numberToIndianWords } from '../utils/numberToWords';
 import { FirestoreService } from './firestoreService';
+import { buildDonationEmail } from '../utils/emailTemplate';
 import { generateDonationPdf } from '../utils/receiptGenerator';
 import { APP_CONFIG, NGO_PROFILE_REVISION, resolveNgoProfile } from '../config/appConfig';
 
@@ -428,7 +429,12 @@ export const StorageService = {
         }
 
         // Real Webhook / Google Apps Script Call
+        const emailContent = buildDonationEmail(donation, settings);
         const payload = {
+          subject: emailContent.subject,
+          body: emailContent.text,
+          htmlBody: emailContent.html,
+          inlineImages: emailContent.inlineImages,
           action: 'appendDonation',
           sheetName: settings.googleSheetsSheetName,
           spreadsheetId: settings.googleSheetsSpreadsheetId,
@@ -543,6 +549,8 @@ export const StorageService = {
     const donation = this.getDonationById(donationId);
     if (!donation) return { success: false, message: 'Donation not found' };
     const settings = this.getNgoSettings();
+    const emailContent = buildDonationEmail(donation, settings, overrideBody);
+    if (!settings.googleSheetsWebhookUrl?.trim()) return { success: false, message: 'Email webhook is not configured.' };
 
     try {
       let pdfBase64 = null;
@@ -562,10 +570,12 @@ export const StorageService = {
           sheetName: settings.googleSheetsSheetName,
           spreadsheetId: settings.googleSheetsSpreadsheetId,
           recipientEmail: overrideEmail || donation.donorEmail,
-          subject: overrideSubject || `Official 80G Donation Receipt [${donation.receiptNo}] - ${settings.orgName}`,
-          body: overrideBody || settings.emailTemplate,
+          subject: overrideSubject || emailContent.subject,
+          body: emailContent.text,
+          htmlBody: emailContent.html,
+          inlineImages: emailContent.inlineImages,
           pdfBase64: pdfBase64,
-          pdfFileName: `Receipt_${donation.receiptNo}_80G.pdf`,
+          pdfFileName: `Receipt_${donation.receiptNo}.pdf`,
           donation: {
             receiptNo: donation.receiptNo,
             date: donation.date,
@@ -593,11 +603,11 @@ export const StorageService = {
             body: JSON.stringify(payload)
           });
         } catch (fetchErr) {
-          console.warn('Fetch to Apps Script for email failed:', fetchErr);
+          throw fetchErr;
         }
       }
 
-      this.recordEmailSent(donationId);
+      this.updateDonation(donationId, { emailStatus: 'queued', emailRequestedAt: new Date().toISOString() });
       return { success: true };
     } catch (err) {
       console.error('Failed to send receipt email:', err);

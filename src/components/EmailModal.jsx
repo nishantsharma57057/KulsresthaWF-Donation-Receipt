@@ -1,45 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { buildDonationEmail } from '../utils/emailTemplate';
 import { StorageService } from '../services/storage';
 import { X, Mail, Send, CheckCircle2, Clock, Copy, Check } from 'lucide-react';
 
-export const EmailModal = ({
+export const EmailModal = props => props.donation ? <EmailComposer key={props.donation.id} {...props} /> : null;
+
+const EmailComposer = ({
   donation,
   settings,
   onClose,
   onSent
 }) => {
-  if (!donation) return null;
 
   const [email, setEmail] = useState(donation.donorEmail || '');
-  const [subject, setSubject] = useState(
-    `Official Donation Receipt [${donation.receiptNo}] - ${settings.orgName}`
-  );
+  const initial = buildDonationEmail(donation, settings);
+  const [subject, setSubject] = useState(initial.subject);
   const [copied, setCopied] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [sentSuccess, setSentSuccess] = useState(false);
 
-  const defaultBody = settings.emailTemplate
-    .replace('{DONOR_NAME}', donation.donorName)
-    .replace('{AMOUNT}', donation.amount.toLocaleString('en-IN'))
-    .replace('{AMOUNT_IN_WORDS}', donation.amountInWords)
-    .replace('{CAUSE}', donation.cause)
-    .replace('{RECEIPT_NO}', donation.receiptNo)
-    .replace('{DATE}', `${donation.date} ${donation.time}`)
-    .replace('{PAYMENT_MODE}', donation.paymentMode)
-    .replace('{TXN_ID}', donation.transactionId)
-    .replace('{REG_80G}', settings.reg80GNumber)
-    .replace('{DONOR_PAN}', donation.donorPan || 'Not Specified');
-
-  const [body, setBody] = useState(defaultBody);
+  const [body, setBody] = useState(initial.message);
+  const emailContent = useMemo(() => buildDonationEmail(donation, settings, body), [donation, settings, body]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(body);
+    navigator.clipboard.writeText(emailContent.text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleSendInstant = async () => {
-    if (!email) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       alert('Please specify recipient email');
       return;
     }
@@ -47,30 +37,29 @@ export const EmailModal = ({
     setIsSending(true);
 
     try {
-      await StorageService.sendReceiptEmail(donation.id, email, subject, body);
+      const result = await StorageService.sendReceiptEmail(donation.id, email.trim(), subject, body);
+      if (!result.success) throw new Error(result.message || 'Email request failed.');
       onSent(donation.id);
       setIsSending(false);
       setSentSuccess(true);
       setTimeout(() => {
         onClose();
       }, 1500);
-    } catch {
+    } catch (error) {
       setIsSending(false);
-      alert('Failed to trigger email webhook.');
+      alert(error.message || 'Failed to trigger email webhook.');
     }
   };
 
   const handleOpenClient = () => {
-    StorageService.recordEmailSent(donation.id);
-    onSent(donation.id);
-    const mailto = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const mailto = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailContent.text)}`;
     window.location.href = mailto;
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-      <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-sky-50 border-b border-sky-100">
@@ -80,10 +69,10 @@ export const EmailModal = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900">
-                Send 80G Receipt via Email
+                Send Donation Receipt
               </h3>
               <p className="text-xs text-slate-500">
-                Sends receipt particulars and tax deduction certificate to donor
+                Receipt-style email with your official PDF attachment
               </p>
             </div>
           </div>
@@ -103,10 +92,10 @@ export const EmailModal = ({
                 <CheckCircle2 className="w-7 h-7" />
               </div>
               <p className="text-base font-bold text-slate-900">
-                Email Dispatched Successfully!
+                Email request submitted
               </p>
               <p className="text-slate-500">
-                Receipt #{donation.receiptNo} has been delivered to {email}.
+                Receipt #{donation.receiptNo} was requested for {email}. Delivery is handled by the email service.
               </p>
             </div>
           ) : (
@@ -157,7 +146,7 @@ export const EmailModal = ({
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-semibold text-slate-700">
-                    Message Body
+                    Personal message
                   </label>
                   <button
                     type="button"
@@ -174,6 +163,10 @@ export const EmailModal = ({
                   onChange={(e) => setBody(e.target.value)}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 leading-relaxed font-mono"
                 />
+              </div>
+              <div className="overflow-hidden rounded-xl border border-slate-200">
+                <div className="border-b border-slate-200 bg-slate-50 px-4 py-3"><h4 className="text-xs font-semibold text-slate-700">Email design preview</h4><p className="mt-1 text-[11px] text-slate-500">Logo, donation details and authorized signatory match your receipt.</p></div>
+                <iframe title="Donation email preview" sandbox="" srcDoc={emailContent.previewHtml} className="block h-[560px] w-full border-0 bg-slate-50" />
               </div>
             </>
           )}
