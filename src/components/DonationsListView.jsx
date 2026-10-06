@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { DonationActionsMenu } from './DonationActionsMenu';
 import { StorageService } from '../services/storage';
 import { formatIndianCurrency } from '../utils/numberToWords';
 import { downloadDonationPdf, printDonationReceipt } from '../utils/receiptGenerator';
@@ -16,7 +17,10 @@ import {
   Plus,
   FileSpreadsheet,
   FileText,
-  X
+  X,
+  Heart,
+  IndianRupee,
+  Clock3
 } from 'lucide-react';
 
 export const DonationsListView = ({
@@ -41,13 +45,13 @@ export const DonationsListView = ({
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase();
         const matches =
-          d.receiptNo.toLowerCase().includes(query) ||
-          d.donorName.toLowerCase().includes(query) ||
-          d.donorPhone.toLowerCase().includes(query) ||
-          d.donorEmail.toLowerCase().includes(query) ||
-          d.donorPan.toLowerCase().includes(query) ||
-          d.transactionId.toLowerCase().includes(query) ||
-          d.donorCity.toLowerCase().includes(query);
+          String(d.receiptNo || '').toLowerCase().includes(query) ||
+          String(d.donorName || '').toLowerCase().includes(query) ||
+          String(d.donorPhone || '').toLowerCase().includes(query) ||
+          String(d.donorEmail || '').toLowerCase().includes(query) ||
+          String(d.donorPan || '').toLowerCase().includes(query) ||
+          String(d.transactionId || '').toLowerCase().includes(query) ||
+          String(d.donorCity || '').toLowerCase().includes(query);
         if (!matches) return false;
       }
 
@@ -67,6 +71,12 @@ export const DonationsListView = ({
       return true;
     });
   }, [donations, searchTerm, causeFilter, modeFilter, sheetFilter, taxFilter]);
+
+  const summary = useMemo(() => ({
+    total: donations.reduce((sum, d) => sum + Number(d.amount || 0), 0),
+    synced: donations.filter(d => d.googleSheetStatus === 'synced').length,
+    pending: donations.filter(d => d.googleSheetStatus === 'pending').length
+  }), [donations]);
 
   const handleDelete = (id, receiptNo) => {
     if (confirm(`Are you sure you want to delete receipt ${receiptNo}? This cannot be undone.`)) {
@@ -99,14 +109,15 @@ export const DonationsListView = ({
     taxFilter !== 'all';
 
   return (
-    <div className="space-y-5 pb-12">
+    <div className="kwf-donations space-y-5 pb-12">
       
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Donations Ledger & Records</h1>
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-600">Foundation workspace</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Donations Ledger & Records</h1>
           <p className="text-xs text-slate-500">
-            {donations.length} total recorded receipts · Searchable database with direct PDF download & dispatch
+            Manage your donations, receipts and donor communications in one place.
           </p>
         </div>
 
@@ -137,8 +148,21 @@ export const DonationsListView = ({
         </div>
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {[
+          { label: 'Total donations', value: formatIndianCurrency(summary.total), icon: IndianRupee, color: 'bg-sky-50 text-sky-600', detail: 'Across all recorded receipts' },
+          { label: 'Donation receipts', value: donations.length, icon: Heart, color: 'bg-indigo-50 text-indigo-600', detail: 'Every contribution, accounted for' },
+          { label: 'Pending sheet sync', value: summary.pending, icon: Clock3, color: 'bg-amber-50 text-amber-600', detail: summary.synced + ' receipts synced to Google Sheets' }
+        ].map(({ label, value, icon: Icon, color, detail }) => (
+          <div key={label} className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div><p className="text-xs font-medium text-slate-500">{label}</p><p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">{value}</p><p className="mt-2 text-[11px] text-slate-400">{detail}</p></div>
+            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${color}`}><Icon className="h-5 w-5" /></span>
+          </div>
+        ))}
+      </div>
+
       {/* Filter & Search Bar */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+      <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           
           {/* Search Input */}
@@ -146,6 +170,7 @@ export const DonationsListView = ({
             <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
             <input
               type="text"
+              aria-label="Search donations"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by receipt #, donor name, phone, PAN, transaction ID..."
@@ -154,6 +179,7 @@ export const DonationsListView = ({
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
+                aria-label="Clear search"
                 className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
               >
                 <X className="w-3.5 h-3.5" />
@@ -164,6 +190,7 @@ export const DonationsListView = ({
           {/* Cause Dropdown */}
           <div>
             <select
+              aria-label="Donation cause"
               value={causeFilter}
               onChange={(e) => setCauseFilter(e.target.value)}
               className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-sky-500 text-slate-700"
@@ -181,6 +208,7 @@ export const DonationsListView = ({
           {/* Payment Mode Dropdown */}
           <div>
             <select
+              aria-label="Payment mode"
               value={modeFilter}
               onChange={(e) => setModeFilter(e.target.value)}
               className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-sky-500 text-slate-700"
@@ -195,73 +223,34 @@ export const DonationsListView = ({
           </div>
         </div>
 
-        {/* Secondary Filters: Sheet Status & 80G Status */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-slate-500 font-medium">Quick Filters:</span>
-
-            {/* Sheet Sync Toggle Buttons */}
-            <div className="inline-flex rounded-lg bg-slate-100 p-0.5 border border-slate-200">
-              <button
-                onClick={() => setSheetFilter('all')}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                  sheetFilter === 'all' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                All Sync
-              </button>
-              <button
-                onClick={() => setSheetFilter('synced')}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                  sheetFilter === 'synced' ? 'bg-white text-emerald-700 shadow-2xs font-semibold' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Sheet Synced
-              </button>
-              <button
-                onClick={() => setSheetFilter('pending')}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                  sheetFilter === 'pending' ? 'bg-white text-amber-700 shadow-2xs font-semibold' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Pending Sync
-              </button>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-4">
+          <div className="flex flex-wrap gap-3">
+            <div role="group" aria-label="Google Sheets sync filter" className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">
+              {[
+                ['all', 'All donations', donations.length],
+                ['synced', 'Sheet synced', summary.synced],
+                ['pending', 'Pending sync', summary.pending]
+              ].map(([key, label, count]) => (
+                <button key={key} type="button" aria-pressed={sheetFilter === key} onClick={() => setSheetFilter(key)}
+                  className={`inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-xs font-medium transition-colors ${sheetFilter === key ? 'bg-white text-sky-700 shadow-sm' : 'text-slate-500 hover:bg-white/60 hover:text-slate-800'}`}>
+                  {label}<span className={`rounded-md px-1.5 py-0.5 text-[10px] tabular-nums ${sheetFilter === key ? 'bg-sky-50 text-sky-700' : 'bg-slate-200/70 text-slate-500'}`}>{count}</span>
+                </button>
+              ))}
             </div>
-
-            {/* 80G Filter Toggle Buttons */}
-            <div className="inline-flex rounded-lg bg-slate-100 p-0.5 border border-slate-200">
-              <button
-                onClick={() => setTaxFilter('all')}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                  taxFilter === 'all' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                All 80G
-              </button>
-              <button
-                onClick={() => setTaxFilter('80g')}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                  taxFilter === '80g' ? 'bg-white text-sky-700 shadow-2xs font-semibold' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                80G Eligible
-              </button>
+            <div role="group" aria-label="80G eligibility filter" className="inline-flex items-center gap-1 rounded-xl bg-slate-100 p-1">
+              {[['all', 'All 80G'], ['80g', '80G eligible']].map(([key, label]) => (
+                <button key={key} type="button" aria-pressed={taxFilter === key} onClick={() => setTaxFilter(key)}
+                  className={`min-h-9 rounded-lg px-3 text-xs font-medium transition-colors ${taxFilter === key ? 'bg-white text-sky-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>{label}</button>
+              ))}
             </div>
           </div>
-
-          {isFiltered && (
-            <button
-              onClick={clearFilters}
-              className="text-xs text-rose-600 hover:text-rose-700 font-semibold"
-            >
-              Reset Filters
-            </button>
-          )}
+          {isFiltered && <button onClick={clearFilters} className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-sky-700"><X className="h-3.5 w-3.5" />Reset filters</button>}
         </div>
       </div>
 
       {/* Main Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4 border-b border-slate-100"><h2 className="text-sm font-semibold text-slate-900">Donation records <span className="ml-2 rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-700">{filteredDonations.length}</span></h2></div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
@@ -374,43 +363,15 @@ export const DonationsListView = ({
 
                     {/* Row Actions */}
                     <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => downloadDonationPdf(d, settings)}
-                          title="Download PDF Receipt"
-                          className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => onOpenWhatsApp(d)}
-                          title="Send on WhatsApp"
-                          className="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => onOpenEmail(d)}
-                          title="Send Email"
-                          className="p-1.5 text-sky-600 hover:text-sky-700 hover:bg-sky-50 rounded-md transition-colors"
-                        >
-                          <Mail className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => onSelectDonation(d)}
-                          title="View Official Receipt"
-                          className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(d.id, d.receiptNo)}
-                          title="Delete Receipt"
-                          className="p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      <DonationActionsMenu receiptNo={d.receiptNo} actions={[
+                        { label: 'View receipt', icon: Eye, run: () => onSelectDonation(d) },
+                        { label: 'Download PDF', icon: Download, run: () => downloadDonationPdf(d, settings) },
+                        { label: 'Print receipt', icon: Printer, run: () => printDonationReceipt(d, settings) },
+                        { label: 'Send on WhatsApp', icon: MessageCircle, run: () => onOpenWhatsApp(d) },
+                        { label: 'Send email', icon: Mail, run: () => onOpenEmail(d) },
+                        ...(d.googleSheetStatus !== 'synced' ? [{ label: 'Sync to Google Sheets', icon: RefreshCw, run: () => onSyncSingle(d.id) }] : []),
+                        { label: 'Delete receipt', icon: Trash2, destructive: true, run: () => handleDelete(d.id, d.receiptNo) }
+                      ]} />
                     </td>
                   </tr>
                 ))
@@ -420,7 +381,7 @@ export const DonationsListView = ({
         </div>
 
         {/* Table Footer Summary */}
-        <div className="flex items-center justify-between px-5 py-3 bg-slate-50 border-t border-slate-200 text-xs text-slate-500">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 bg-slate-50 border-t border-slate-200 text-xs text-slate-500">
           <span>
             Showing <strong className="text-slate-800">{filteredDonations.length}</strong> of{' '}
             <strong className="text-slate-800">{donations.length}</strong> total donations
