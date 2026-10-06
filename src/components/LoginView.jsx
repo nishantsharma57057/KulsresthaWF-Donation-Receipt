@@ -40,7 +40,7 @@ export const LoginView = ({ onLoginSuccess }) => {
   const [otpResendTimer, setOtpResendTimer] = useState(30);
   const [otpSentNotice, setOtpSentNotice] = useState(null);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
-  const [showDevCode, setShowDevCode] = useState(false);
+  const [recoveryIdentifier, setRecoveryIdentifier] = useState('');
 
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
@@ -107,11 +107,14 @@ export const LoginView = ({ onLoginSuccess }) => {
     try {
       console.log(`[Email 2FA Live] Dispatching OTP for ${targetUser.email}`);
       setOtpSentNotice(`Sending verification code to ${targetUser.email}...`);
-      await StorageService.sendLoginOtp(targetUser, code);
+      const result = await StorageService.sendLoginOtp(targetUser, code);
+      if (!result?.success) throw new Error('Could not send the verification code. Please try again or contact your administrator.');
       setOtpSentNotice(`Live 6-digit verification code sent to ${targetUser.email}`);
     } catch (err) {
       console.warn('Live OTP dispatch error:', err);
-      setOtpSentNotice(`Verification code sent to ${maskEmail(targetUser.email)}`);
+      setGeneratedOtp('');
+      setError('Could not send the verification code. Please try again or contact your administrator.');
+      setOtpSentNotice('Verification code could not be sent.');
     } finally {
       setIsSendingOtp(false);
     }
@@ -156,7 +159,7 @@ export const LoginView = ({ onLoginSuccess }) => {
     e.preventDefault();
     setError(null);
 
-    if (enteredOtp.trim() !== generatedOtp) {
+    if (!generatedOtp || isSendingOtp || enteredOtp.trim() !== generatedOtp) {
       setError('Incorrect OTP. Please enter the valid 6-digit code received on your email.');
       return;
     }
@@ -213,8 +216,8 @@ export const LoginView = ({ onLoginSuccess }) => {
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-semibold text-white block">Centralized Configuration</span>
-                    <span className="text-slate-400 text-[11px]">Google Sheets, NGO details and email keys in one central file.</span>
+                    <span className="font-semibold text-white block">Connected workspace</span>
+                    <span className="text-slate-400 text-[11px]">Donation records and receipt tools, together in one place.</span>
                   </div>
                 </div>
               </div>
@@ -238,7 +241,7 @@ export const LoginView = ({ onLoginSuccess }) => {
                   type="button"
                   onClick={() => {
                     setTab('login');
-                    setError(null);
+                    setError(null); setSuccessMsg(null);
                   }}
                   className={`text-sm font-semibold pb-1 px-3 border-b-2 transition-all ${
                     tab === 'login'
@@ -252,7 +255,7 @@ export const LoginView = ({ onLoginSuccess }) => {
                   type="button"
                   onClick={() => {
                     setTab('register');
-                    setError(null);
+                    setError(null); setSuccessMsg(null);
                   }}
                   className={`text-sm font-semibold pb-1 px-3 border-b-2 transition-all ${
                     tab === 'register'
@@ -308,7 +311,7 @@ export const LoginView = ({ onLoginSuccess }) => {
                       ) : (
                         <>
                           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                          <span>Live 2FA Dispatched to Email</span>
+                          <span>{generatedOtp ? 'Verification email requested' : 'Verification email unavailable'}</span>
                         </>
                       )}
                     </span>
@@ -317,38 +320,9 @@ export const LoginView = ({ onLoginSuccess }) => {
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-600 leading-relaxed">
-                    A real-time 6-digit verification code was dispatched to{' '}
-                    <strong className="text-slate-800">{pendingUser.email}</strong>.
+                    {otpSentNotice}
                   </p>
                 </div>
-
-                {/* Direct On-Screen OTP Box (Can be turned off in appConfig.js) */}
-                {APP_CONFIG.email.showOtpOnScreen && (
-                  <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-xl text-amber-950 shadow-xs flex items-center justify-between animate-in fade-in duration-200">
-                    <div>
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
-                        <KeyRound className="w-4 h-4 text-amber-600" />
-                        <span>Current Login OTP:</span>
-                      </div>
-                      <p className="text-[10px] text-amber-700 mt-0.5">
-                        (Testing Mode: Visible on screen. Will be hidden for production)
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-black text-lg tracking-widest bg-white px-3 py-1 rounded-lg border-2 border-amber-400 text-amber-900 shadow-xs select-all">
-                        {generatedOtp}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setEnteredOtp(generatedOtp)}
-                        className="text-xs bg-amber-600 hover:bg-amber-700 text-white font-semibold px-2.5 py-1.5 rounded-md transition-colors shadow-2xs cursor-pointer active:scale-95"
-                        title="Click to automatically fill the OTP input"
-                      >
-                        Auto Fill
-                      </button>
-                    </div>
-                  </div>
-                )}
 
                 <form onSubmit={handleOtpVerify} className="space-y-4">
                   <div>
@@ -389,7 +363,7 @@ export const LoginView = ({ onLoginSuccess }) => {
 
                     <button
                       type="button"
-                      disabled={otpResendTimer > 0}
+                      disabled={otpResendTimer > 0 || isSendingOtp}
                       onClick={handleResendOtp}
                       className={`font-semibold flex items-center gap-1 ${
                         otpResendTimer > 0
@@ -404,6 +378,25 @@ export const LoginView = ({ onLoginSuccess }) => {
                     </button>
                   </div>
                 </form>
+              </div>
+            ) : tab === 'recovery' ? (
+              <div className="mt-6 space-y-5">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600"><KeyRound className="h-6 w-6" /></div>
+                <div><h3 className="text-xl font-bold text-slate-900">Forgot your password?</h3><p className="mt-2 text-xs leading-relaxed text-slate-500">Ask your workspace administrator to reset your password. They will verify your identity before updating your account.</p></div>
+                <form onSubmit={e => {
+                  e.preventDefault();
+                  const contact = APP_CONFIG.email.replyTo || APP_CONFIG.ngoProfile.email;
+                  const subject = 'Workspace password reset request';
+                  const body = 'Hello administrator,\n\nPlease help me reset my workspace password.\nAccount email or username: ' + recoveryIdentifier.trim() + '\n\nPlease verify my identity before resetting my password.\nThank you.';
+                  window.location.href = 'mailto:' + encodeURIComponent(contact) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+                  setSuccessMsg('Your email app will open with a reset request. Send it to your administrator to continue.');
+                }} className="space-y-4">
+                  <label htmlFor="recovery-account" className="block text-xs font-semibold text-slate-700">Account email or username</label>
+                  <input id="recovery-account" required value={recoveryIdentifier} onChange={e => setRecoveryIdentifier(e.target.value)} autoComplete="username" placeholder="Enter your registered email or username" className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-xs" />
+                  <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-lg bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-700"><Mail className="h-4 w-4" />Email reset request</button>
+                </form>
+                <p className="text-[11px] text-slate-500">Email app did not open? Contact <a className="text-sky-700 underline" href={'mailto:' + (APP_CONFIG.email.replyTo || APP_CONFIG.ngoProfile.email)}>{APP_CONFIG.email.replyTo || APP_CONFIG.ngoProfile.email}</a>.</p>
+                <button type="button" onClick={() => { setTab('login'); setError(null); setSuccessMsg(null); }} className="text-xs font-semibold text-sky-700">← Back to sign in</button>
               </div>
             ) : tab === 'register' ? (
               /* 2. REGISTRATION FORM */
@@ -525,7 +518,7 @@ export const LoginView = ({ onLoginSuccess }) => {
                       required
                       value={loginIdentifier}
                       onChange={(e) => setLoginIdentifier(e.target.value)}
-                      placeholder="e.g. nishantsharma57057@gmail.com or nishantsharma"
+                      placeholder="Enter your email or username"
                       className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 bg-white"
                     />
                   </div>
@@ -535,9 +528,7 @@ export const LoginView = ({ onLoginSuccess }) => {
                       <label className="text-slate-700 font-semibold">
                         Password
                       </label>
-                      <span className="text-[11px] text-slate-400">
-                        Default: admin123
-                      </span>
+
                     </div>
                     <div className="relative">
                       <input
@@ -566,6 +557,7 @@ export const LoginView = ({ onLoginSuccess }) => {
                     <span>Continue with password</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
+                  <div className="pt-1 text-center"><button type="button" onClick={() => { setRecoveryIdentifier(loginIdentifier); setTab('recovery'); setError(null); setSuccessMsg(null); }} className="text-xs font-semibold text-sky-700 hover:text-sky-900 hover:underline">Forgot password?</button></div>
                 </form>
               </div>
             )}

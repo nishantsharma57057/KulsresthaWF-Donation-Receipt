@@ -13,7 +13,8 @@ import { NewDonationModal } from './components/NewDonationModal.jsx';
 import { ReceiptViewModal } from './components/ReceiptViewModal.jsx';
 import { WhatsAppModal } from './components/WhatsAppModal.jsx';
 import { EmailModal } from './components/EmailModal.jsx';
-import { Calendar, ChevronRight, Cloud } from 'lucide-react';
+import { ProfileDropdown } from './components/ProfileDropdown.jsx';
+import { Calendar, ChevronRight } from 'lucide-react';
 
 export default function App() {
   const [donations, setDonations] = useState(() => StorageService.getDonations());
@@ -180,23 +181,16 @@ export default function App() {
 
           {/* Right: Date & User Avatar (Image 2 & 3) */}
           <div className="flex items-center gap-4">
-            {/* Cloud Status */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <Cloud className="w-3 h-3 text-emerald-500" />
-              <span>Cloud DB Active</span>
-            </div>
-
             <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
               <Calendar className="w-3.5 h-3.5 text-slate-400" />
               <span>{todayFormatted}</span>
             </div>
 
-            <div
-              className="w-8 h-8 rounded-full bg-sky-100 text-sky-800 flex items-center justify-center font-bold text-xs font-mono border border-sky-200 shadow-2xs"
-              title={`${currentUser.name} (${currentUser.username || 'admin'})`}
-            >
-              {userInitials}
-            </div>
+            <ProfileDropdown currentUser={currentUser} onLogout={() => {
+              StorageService.setCurrentUser(null);
+              setCurrentUser(null);
+              showToast('Signed out successfully.');
+            }} />
           </div>
         </header>
 

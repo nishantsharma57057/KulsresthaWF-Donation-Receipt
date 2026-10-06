@@ -70,13 +70,13 @@ export const Sidebar = ({
                 key={item.id}
                 aria-current={isActive ? 'page' : undefined}
                 onClick={() => onSelectTab(item.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-semibold transition-all ${isActive
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-[15px] font-semibold transition-all ${isActive
                     ? 'bg-[#163b5e] text-white shadow-2xs font-bold'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
                   }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-sky-400' : 'text-slate-400'}`} />
+                  <Icon className={`w-[18px] h-[18px] ${isActive ? 'text-sky-400' : 'text-slate-400'}`} />
                   <span>{item.label}</span>
                 </div>
                 {typeof item.badge === 'number' && (
@@ -93,7 +93,7 @@ export const Sidebar = ({
         <div className="px-3 mt-4">
           <button
             onClick={onOpenNewDonation}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white border border-slate-700 hover:border-sky-500 hover:bg-slate-800/80 transition-all active:scale-[0.99]"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white border border-slate-700 hover:border-sky-500 hover:bg-slate-800/80 transition-all active:scale-[0.99]"
           >
             <Plus className="w-3.5 h-3.5 text-sky-400" />
             <span>New donation</span>

@@ -138,8 +138,6 @@ export const ReportsView = ({
                 <th className="py-3 px-4">Donor Name</th>
                 <th className="py-3 px-4 font-mono">Donor PAN</th>
                 <th className="py-3 px-4">Address</th>
-                <th className="py-3 px-4">Section Code</th>
-                <th className="py-3 px-4">Donation Type</th>
                 <th className="py-3 px-4">Mode</th>
                 <th className="py-3 px-4 text-right">Amount (₹)</th>
               </tr>
@@ -157,10 +155,7 @@ export const ReportsView = ({
                   <td className="py-2.5 px-4 text-slate-600 truncate max-w-[180px]">
                     {d.donorAddress}, {d.donorCity}
                   </td>
-                  <td className="py-2.5 px-4 font-mono text-[11px] text-slate-500">
-                    Section 80G(5)(vi)
-                  </td>
-                  <td className="py-2.5 px-4 text-slate-600">Specific Grant</td>
+
                   <td className="py-2.5 px-4 text-slate-600">{d.paymentMode}</td>
                   <td className="py-2.5 px-4 text-right font-mono font-bold text-slate-900">
                     ₹{d.amount.toLocaleString('en-IN')}
