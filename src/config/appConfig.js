@@ -52,29 +52,29 @@ export const APP_CONFIG = {
   // 5. WHATSAPP GATEWAY CREDENTIALS (WATI / Interakt / Gupshup)
   whatsApp: {
     provider: 'direct_api',
-    businessPhone: '+91 98110 00000',
+    businessPhone: '8826961430',
     templateName: 'kwf_80g_receipt_ack_v1'
   },
 
   // 6. DEFAULT NGO LEGAL & REGISTRATION PROFILE
   ngoProfile: {
-    orgName: 'Kulshrestha Welfare Foundation',
-    tagline: 'Care · Dignity · Opportunity · Impact',
-    cin: 'U85300DL2022NPL404259',
-    pan: 'AABCK4829E',
-    reg80GNumber: 'AABCK4829EF20231',
-    reg12ANumber: 'AABCK4829EE20231',
-    section80GClause: 'Donations qualify for 50% deduction under Section 80G(5)(vi) of the Income Tax Act, 1961',
-    address: 'Mayur Vihar Phase 3',
-    city: 'New Delhi',
-    state: 'Delhi',
-    pincode: '110096',
-    phone: '+91 98110 00000',
-    email: 'info@kulshresthawf.org',
-    website: 'https://www.kulshresthawf.org',
-    signatoryName: 'Sandeep Kulshrestha',
-    signatoryTitle: 'Founder & Managing Trustee'
-  },
+    "orgName": "Kulshrestha Welfare Foundation",
+    "tagline": "Care · Dignity · Opportunity · Impact",
+    "cin": "U8530DL2022NPL404259",
+    "pan": "AAJCK7754K",
+    "reg80GNumber": "",
+    "reg12ANumber": "",
+    "section80GClause": "",
+    "address": "B-323, G.D Colony, Myur Vihar Phase-3",
+    "city": "New Delhi",
+    "state": "",
+    "pincode": "110096",
+    "phone": "8826961430",
+    "email": "info@kulshresthawf.org",
+    "website": "www.kulshresthawf.org",
+    "signatoryName": "Ayush Kulshrestha",
+    "signatoryTitle": "Trustee"
+},
 
   // 7. FIREBASE CLOUD DATABASE REFERENCE
   firebase: {
@@ -91,3 +91,10 @@ export const APP_CONFIG = {
     showUserAccessInSidebar: true
   }
 };
+
+export const NGO_PROFILE_REVISION = 'verified-profile-2026-10-07';
+
+export function resolveNgoProfile(settings = {}) {
+  if (settings.ngoProfileRevision === NGO_PROFILE_REVISION) return settings;
+  return { ...settings, ...APP_CONFIG.ngoProfile, ngoProfileRevision: NGO_PROFILE_REVISION };
+}

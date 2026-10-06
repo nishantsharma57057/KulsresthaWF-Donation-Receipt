@@ -1,7 +1,7 @@
 import { numberToIndianWords } from '../utils/numberToWords';
 import { FirestoreService } from './firestoreService';
 import { generateDonationPdf } from '../utils/receiptGenerator';
-import { APP_CONFIG } from '../config/appConfig';
+import { APP_CONFIG, NGO_PROFILE_REVISION, resolveNgoProfile } from '../config/appConfig';
 
 const DONATIONS_KEY = 'kwf_donations_records_v1';
 const SETTINGS_KEY = 'kwf_ngo_settings_v1';
@@ -9,21 +9,8 @@ const SYNC_LOGS_KEY = 'kwf_sheet_sync_logs_v1';
 const AUTH_KEY = 'kwf_current_user_v1';
 
 export const DEFAULT_SETTINGS = {
-  orgName: 'Kulshrestha Welfare Foundation',
-  tagline: 'Empowering Lives · Eradicating Hunger · Fostering Education',
-  cin: 'U85300DL2022NPL404259',
-  pan: 'AABCK4829E',
-  reg80GNumber: 'AABCK4829EF20231',
-  reg12ANumber: 'AABCK4829EE20231',
-  address: 'H. No. B-323, T/F, G.D Colony, Mayur Vihar Phase - 3',
-  city: 'East Delhi',
-  state: 'Delhi',
-  pincode: '110096',
-  phone: '+91 98112 34567',
-  email: 'info@kulshresthawf.org',
-  website: 'https://www.kulshresthawf.org',
-  signatoryName: 'Sandeep Kulshrestha',
-  signatoryTitle: 'Founder & Director',
+  ...APP_CONFIG.ngoProfile,
+  ngoProfileRevision: NGO_PROFILE_REVISION,
   receiptPrefix: 'KWF',
   financialYear: '2026-27',
   googleSheetsWebhookUrl: '',
@@ -35,7 +22,7 @@ export const DEFAULT_SETTINGS = {
   senderName: 'Kulshrestha Welfare Foundation',
   gmailAppScriptEnabled: true,
   customEmailWebhookUrl: '',
-  whatsappSenderNumber: '+91 98112 34567',
+  whatsappSenderNumber: '8826961430',
   whatsappTemplate: `Dear {DONOR_NAME},
 
 Warm greetings from *Kulshrestha Welfare Foundation*! 🙏
@@ -44,9 +31,8 @@ We sincerely thank you for your generous donation of *₹{AMOUNT}* towards *{CAU
 🧾 *Receipt No:* {RECEIPT_NO}
 📅 *Date:* {DATE}
 💳 *Mode:* {PAYMENT_MODE} (Txn: {TXN_ID})
-🛡️ *80G Tax Exemption:* Eligible under Section 80G of Income Tax Act.
 
-Download your official 80G receipt here:
+Download your donation receipt here:
 {RECEIPT_URL}
 
 Your kindness helps us provide warm meals, child education, and women empowerment across Delhi NCR.
@@ -68,17 +54,17 @@ Date of Donation: {DATE}
 Amount: ₹{AMOUNT} ({AMOUNT_IN_WORDS})
 Payment Mode: {PAYMENT_MODE}
 Transaction Reference: {TXN_ID}
-80G Exemption: 50% deduction eligible under Section 80G (Registration: {REG_80G})
 Donor PAN: {DONOR_PAN}
 ------------------------------------------
 
-Your digital 80G tax exemption receipt is attached and verified.
+Your donation receipt is attached.
 Thank you for standing with underprivileged children and women in our society.
 
 With sincere appreciation,
 Kulshrestha Welfare Foundation
-CIN: U85300DL2022NPL404259
-Mayur Vihar Phase 3, Delhi - 110096
+Registration No.: U8530DL2022NPL404259
+B-323, G.D Colony, Myur Vihar Phase-3, New Delhi 110096
+Mobile: 8826961430
 Website: https://www.kulshresthawf.org
 Email: info@kulshresthawf.org`
 };
@@ -375,7 +361,15 @@ export const StorageService = {
       if (!parsed.googleSheetsWebhookUrl && fallbackUrl) {
         parsed.googleSheetsWebhookUrl = fallbackUrl;
       }
-      return { ...base, ...parsed };
+            const merged = { ...base, ...parsed };
+      if (parsed.ngoProfileRevision !== NGO_PROFILE_REVISION) {
+        const migrated = resolveNgoProfile({ ...merged, ngoProfileRevision: parsed.ngoProfileRevision });
+        migrated.emailTemplate = DEFAULT_SETTINGS.emailTemplate;
+        migrated.whatsappTemplate = DEFAULT_SETTINGS.whatsappTemplate;
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(migrated));
+        return migrated;
+      }
+      return merged;
     } catch {
       return DEFAULT_SETTINGS;
     }
