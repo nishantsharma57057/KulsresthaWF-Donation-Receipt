@@ -1,3 +1,4 @@
+import { filterDonationRecords } from '../utils/donationRecords';
 import { numberToIndianWords } from '../utils/numberToWords';
 import { FirestoreService } from './firestoreService';
 import { buildDonationEmail } from '../utils/emailTemplate';
@@ -15,7 +16,7 @@ export const DEFAULT_SETTINGS = {
   receiptPrefix: 'KWF',
   financialYear: '2026-27',
   googleSheetsWebhookUrl: '',
-  googleSheetsSpreadsheetId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
+  googleSheetsSpreadsheetId: '',
   googleSheetsSheetName: 'Donations_2026_27',
   isGoogleSheetAutoSync: true,
   isAutoEmailReceipt: true,
@@ -77,170 +78,14 @@ export const INITIAL_USER = {
   role: 'admin'
 };
 
-const SAMPLE_DONATIONS = [
-  {
-    id: 'don_101',
-    receiptNo: 'KWF-202627-0101',
-    date: '2026-10-01',
-    time: '11:15',
-    donorName: 'Vikramaditya Sharma',
-    donorPhone: '+91 98101 23456',
-    donorEmail: 'vikram.sharma@example.com',
-    donorPan: 'ABCPS1234D',
-    donorAddress: 'C-42, Defence Colony',
-    donorCity: 'New Delhi',
-    donorState: 'Delhi',
-    donorPincode: '110024',
-    amount: 11000,
-    amountInWords: 'Rupees Eleven Thousand Only',
-    cause: 'Child Education',
-    paymentMode: 'UPI',
-    transactionId: 'UPI-261001-9876541',
-    is80GEligible: true,
-    notes: 'Support for stationery and computer lab kits for 10 slum children.',
-    createdAt: '2026-10-01T11:15:00.000Z',
-    createdBy: 'Ayush Kulshrestha (Admin)',
-    googleSheetStatus: 'synced',
-    googleSheetSyncedAt: '2026-10-01T11:15:05.000Z',
-    googleSheetRowId: 2,
-    emailStatus: 'sent',
-    emailSentAt: '2026-10-01T11:15:08.000Z',
-    whatsappStatus: 'sent',
-    whatsappSentAt: '2026-10-01T11:15:10.000Z'
-  },
-  {
-    id: 'don_102',
-    receiptNo: 'KWF-202627-0102',
-    date: '2026-10-01',
-    time: '10:30',
-    donorName: 'Sunita Mehra',
-    donorPhone: '+91 99581 87654',
-    donorEmail: 'sunita.mehra@gmail.com',
-    donorPan: 'BPMPS7890E',
-    donorAddress: 'Tower 4, Flat 702, ATS Village, Expressway',
-    donorCity: 'Noida',
-    donorState: 'Uttar Pradesh',
-    donorPincode: '201304',
-    amount: 5100,
-    amountInWords: 'Rupees Five Thousand One Hundred Only',
-    cause: 'Hunger Relief & Food',
-    paymentMode: 'UPI',
-    transactionId: 'UPI-261001-4458921',
-    is80GEligible: true,
-    notes: 'Midday meal sponsorship for hunger eradication drive in East Delhi.',
-    createdAt: '2026-10-01T10:30:00.000Z',
-    createdBy: 'Ayush Kulshrestha (Admin)',
-    googleSheetStatus: 'synced',
-    googleSheetSyncedAt: '2026-10-01T10:30:04.000Z',
-    googleSheetRowId: 3,
-    emailStatus: 'sent',
-    emailSentAt: '2026-10-01T10:30:06.000Z',
-    whatsappStatus: 'sent',
-    whatsappSentAt: '2026-10-01T10:30:07.000Z'
-  },
-  {
-    id: 'don_103',
-    receiptNo: 'KWF-202627-0103',
-    date: '2026-09-30',
-    time: '16:45',
-    donorName: 'Rajesh & Pooja Gupta',
-    donorPhone: '+91 98188 99123',
-    donorEmail: 'rajeshgupta.ca@rediffmail.com',
-    donorPan: 'AAAPG9944K',
-    donorAddress: 'B-14, Preet Vihar',
-    donorCity: 'East Delhi',
-    donorState: 'Delhi',
-    donorPincode: '110092',
-    amount: 25000,
-    amountInWords: 'Rupees Twenty-Five Thousand Only',
-    cause: 'Women Empowerment',
-    paymentMode: 'Net Banking / NEFT',
-    transactionId: 'HDFC-N30920268871',
-    is80GEligible: true,
-    notes: 'Sewing machine and skill training batch support for rural women.',
-    createdAt: '2026-09-30T16:45:00.000Z',
-    createdBy: 'Sandeep Kulshrestha (Director)',
-    googleSheetStatus: 'synced',
-    googleSheetSyncedAt: '2026-09-30T16:45:10.000Z',
-    googleSheetRowId: 4,
-    emailStatus: 'sent',
-    emailSentAt: '2026-09-30T16:45:12.000Z',
-    whatsappStatus: 'sent',
-    whatsappSentAt: '2026-09-30T16:45:15.000Z'
-  },
-  {
-    id: 'don_104',
-    receiptNo: 'KWF-202627-0104',
-    date: '2026-09-29',
-    time: '14:20',
-    donorName: 'Ananya Verma',
-    donorPhone: '+91 97110 54321',
-    donorEmail: 'ananya.verma@techindia.org',
-    donorPan: 'CKPPV4521N',
-    donorAddress: 'Plot 88, Sector 15',
-    donorCity: 'Gurugram',
-    donorState: 'Haryana',
-    donorPincode: '122001',
-    amount: 2100,
-    amountInWords: 'Rupees Two Thousand One Hundred Only',
-    cause: 'Healthcare & Medical',
-    paymentMode: 'UPI',
-    transactionId: 'UPI-260929-3329910',
-    is80GEligible: true,
-    notes: 'Free medicines and eye camp support.',
-    createdAt: '2026-09-29T14:20:00.000Z',
-    createdBy: 'Ayush Kulshrestha (Admin)',
-    googleSheetStatus: 'synced',
-    googleSheetSyncedAt: '2026-09-29T14:20:05.000Z',
-    googleSheetRowId: 5,
-    emailStatus: 'sent',
-    emailSentAt: '2026-09-29T14:20:07.000Z',
-    whatsappStatus: 'sent',
-    whatsappSentAt: '2026-09-29T14:20:09.000Z'
-  },
-  {
-    id: 'don_105',
-    receiptNo: 'KWF-202627-0105',
-    date: '2026-09-28',
-    time: '18:10',
-    donorName: 'Manish Chawla',
-    donorPhone: '+91 98990 12876',
-    donorEmail: 'manish.chawla@delhitraders.co.in',
-    donorPan: 'AJUPC7810R',
-    donorAddress: 'Shop 12, Chandni Chowk',
-    donorCity: 'Central Delhi',
-    donorState: 'Delhi',
-    donorPincode: '110006',
-    amount: 51000,
-    amountInWords: 'Rupees Fifty-One Thousand Only',
-    cause: 'Child Education',
-    paymentMode: 'Cheque / DD',
-    transactionId: 'CHQ-002819-SBI',
-    is80GEligible: true,
-    notes: 'Annual scholarship for 5 meritorious underprivileged students.',
-    createdAt: '2026-09-28T18:10:00.000Z',
-    createdBy: 'Sandeep Kulshrestha (Director)',
-    googleSheetStatus: 'synced',
-    googleSheetSyncedAt: '2026-09-28T18:10:08.000Z',
-    googleSheetRowId: 6,
-    emailStatus: 'sent',
-    emailSentAt: '2026-09-28T18:10:11.000Z',
-    whatsappStatus: 'sent',
-    whatsappSentAt: '2026-09-28T18:10:13.000Z'
-  }
-];
 
 export const StorageService = {
   getDonations() {
     try {
       const data = localStorage.getItem(DONATIONS_KEY);
-      if (!data) {
-        localStorage.setItem(DONATIONS_KEY, JSON.stringify(SAMPLE_DONATIONS));
-        return SAMPLE_DONATIONS;
-      }
-      return JSON.parse(data);
+      return filterDonationRecords(data ? JSON.parse(data) : []);
     } catch {
-      return SAMPLE_DONATIONS;
+      return [];
     }
   },
 
@@ -251,7 +96,11 @@ export const StorageService = {
 
   getNextReceiptNo() {
     const settings = this.getNgoSettings();
-    const list = this.getDonations();
+    let list = this.getDonations();
+    try {
+      const cached = JSON.parse(localStorage.getItem(DONATIONS_KEY) || '[]');
+      if (Array.isArray(cached)) list = cached.filter(Boolean);
+    } catch { /* use the visible records */ }
     const currentFY = settings.financialYear.replace('-', '');
     const prefix = settings.receiptPrefix || 'KWF';
     
@@ -277,8 +126,6 @@ export const StorageService = {
     const amountInWords = numberToIndianWords(donationData.amount);
 
     const settings = this.getNgoSettings();
-    const hasEmail = Boolean(donationData.donorEmail && donationData.donorEmail.trim());
-    const autoEmailSent = Boolean(hasEmail && settings.isAutoEmailReceipt !== false);
 
     const newDonation = {
       ...donationData,
@@ -287,8 +134,7 @@ export const StorageService = {
       amountInWords,
       createdAt: now.toISOString(),
       googleSheetStatus: 'pending',
-      emailStatus: autoEmailSent ? 'sent' : 'pending',
-      emailSentAt: autoEmailSent ? now.toISOString() : undefined,
+      emailStatus: 'pending',
       whatsappStatus: 'pending'
     };
 
@@ -363,6 +209,7 @@ export const StorageService = {
         parsed.googleSheetsWebhookUrl = fallbackUrl;
       }
             const merged = { ...base, ...parsed };
+      if (merged.googleSheetsSpreadsheetId === '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms') merged.googleSheetsSpreadsheetId = '';
       if (parsed.ngoProfileRevision !== NGO_PROFILE_REVISION) {
         const migrated = resolveNgoProfile({ ...merged, ngoProfileRevision: parsed.ngoProfileRevision });
         migrated.emailTemplate = DEFAULT_SETTINGS.emailTemplate;
@@ -415,6 +262,7 @@ export const StorageService = {
     const settings = this.getNgoSettings();
 
     try {
+      if (!settings.googleSheetsWebhookUrl?.trim()) throw new Error('Google Sheets webhook is not configured.');
       if (settings.googleSheetsWebhookUrl && settings.googleSheetsWebhookUrl.trim() !== '') {
         // Generate real official PDF base64 for attachment
         let pdfBase64 = null;
@@ -459,8 +307,7 @@ export const StorageService = {
           }
         };
 
-        try {
-          await fetch(settings.googleSheetsWebhookUrl, {
+        await fetch(settings.googleSheetsWebhookUrl, {
             method: 'POST',
             mode: 'no-cors', // standard for Google Apps Script web apps
             headers: {
@@ -468,30 +315,27 @@ export const StorageService = {
             },
             body: JSON.stringify(payload)
           });
-        } catch (fetchErr) {
-          console.warn('Direct fetch to Apps Script failed, marking locally:', fetchErr);
-        }
+
       }
 
-      // Mark donation as synced
+      // An opaque no-cors response cannot confirm a Sheets write.
       const now = new Date().toISOString();
       const updated = this.updateDonation(donationId, {
-        googleSheetStatus: 'synced',
-        googleSheetSyncedAt: now,
-        googleSheetRowId: Math.floor(Math.random() * 200) + 10
+        googleSheetStatus: 'requested',
+        googleSheetRequestedAt: now
       });
 
       this.addSyncLog({
         receiptNo: updated.receiptNo,
         donorName: updated.donorName,
         amount: updated.amount,
-        status: 'success',
-        message: `Successfully synchronized row into Google Sheet [${settings.googleSheetsSheetName}]`
+        status: 'requested',
+        message: `Sync request submitted for Google Sheet [${settings.googleSheetsSheetName}]; confirmation pending`
       });
 
       return {
         success: true,
-        message: `Receipt ${donation.receiptNo} successfully synced to Google Sheet`
+        message: `Sync request submitted for receipt ${donation.receiptNo}; confirmation pending`
       };
     } catch (err) {
       this.updateDonation(donationId, {
@@ -958,7 +802,7 @@ export const StorageService = {
     const rows = donations.map((d, index) => [
       index + 1,
       `"${settings.reg80GNumber}"`,
-      `"2023-05-15"`,
+      `""`,
       `"Section 80G(5)(vi)"`,
       `"${d.donorPan}"`,
       `"PAN"`,

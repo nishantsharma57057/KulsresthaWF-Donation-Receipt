@@ -1,5 +1,4 @@
 import React from 'react';
-import { Logo } from './Logo.jsx';
 import { APP_CONFIG } from '../config/appConfig';
 import {
   LayoutDashboard,
@@ -32,7 +31,7 @@ export const Sidebar = ({
   ];
 
   const getInitials = (name) => {
-    if (!name) return 'NS';
+    if (!name) return 'U';
     return name
       .split(' ')
       .map((n) => n[0])
@@ -49,7 +48,7 @@ export const Sidebar = ({
         {/* Brand Logo in White Card (Image 2 & 3) */}
         <div className="p-4 border-b border-slate-800/80">
           <div className="bg-white px-3.5 py-2.5 rounded-lg shadow-sm flex items-center justify-center">
-            <Logo size="sm" />
+            <img src="/dashboard-logo.png" alt="Kulshrestha Welfare Foundation" width="230" height="44" className="block w-full h-auto object-contain" />
           </div>
         </div>
 
@@ -109,7 +108,7 @@ export const Sidebar = ({
           <Shield className="w-4 h-4 text-sky-400 shrink-0" />
           <div className="text-[11px] leading-tight">
             <span className="font-semibold text-slate-200 block">Private workspace</span>
-            <span className="text-slate-400 text-[10px]">Your records, protected.</span>
+            <span className="text-slate-400 text-[10px]">Donation administration.</span>
           </div>
         </div>
 
@@ -121,10 +120,10 @@ export const Sidebar = ({
             </div>
             <div className="leading-tight">
               <span className="font-bold text-xs text-white block">
-                {currentUser?.status === 'main_admin' ? 'Main admin' : currentUser?.name || 'Main admin'}
+                {currentUser?.status === 'main_admin' ? 'User' : currentUser?.name || 'Main admin'}
               </span>
               <span className="text-[11px] text-slate-400 font-mono">
-                {currentUser?.username || 'nishantsharma'}
+                {currentUser?.username || ''}
               </span>
             </div>
           </div>

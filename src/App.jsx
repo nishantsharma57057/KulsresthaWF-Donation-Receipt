@@ -1,3 +1,4 @@
+import { filterDonationRecords } from './utils/donationRecords';
 import { SharedReceiptPage } from './components/SharedReceiptPage.jsx';
 import React, { useState, useEffect } from 'react';
 import { StorageService } from './services/storage';
@@ -51,27 +52,27 @@ function Workspace() {
     return () => { active = false; };
   }, [currentUser?.id]);
 
-  // Real-time Firestore subscription on boot
+  // Subscribe after account access has been checked.
   useEffect(() => {
+    if (!currentUser?.id || checkingAccess) return;
     testFirestoreConnection()
       .then((ok) => setIsCloudConnected(ok))
       .catch(() => setIsCloudConnected(false));
 
     const unsubscribe = FirestoreService.subscribeDonations((cloudDonations) => {
-      if (cloudDonations && cloudDonations.length > 0) {
-        setDonations(cloudDonations);
+      const records = filterDonationRecords(cloudDonations);
+      if (Array.isArray(cloudDonations) && cloudDonations.length > 0) {
+        setDonations(records);
+        // Keep original cache records for receipt sequence continuity; filter at read time.
         localStorage.setItem('kwf_donations_records_v1', JSON.stringify(cloudDonations));
       } else {
-        // Initial seeding if cloud DB is completely fresh
-        const localRecords = StorageService.getDonations();
-        localRecords.forEach((item) => {
-          FirestoreService.saveDonation(item).catch(console.warn);
-        });
+        // Preserve real local receipts without automatically uploading them.
+        setDonations(StorageService.getDonations());
       }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [currentUser?.id, checkingAccess]);
 
   const refreshDonations = () => {
     setDonations(StorageService.getDonations());
@@ -89,7 +90,7 @@ function Workspace() {
     try {
       const res = await StorageService.syncAllPendingToGoogleSheet();
       refreshDonations();
-      showToast(`Google Sheets Sync: ${res.syncedCount} rows synced.`);
+      showToast(`Google Sheets Sync: ${res.syncedCount} requests submitted; ${res.failedCount} failed.`);
     } catch (err) {
       showToast(`Sync Failed: ${err.message}`);
     } finally {

@@ -62,7 +62,7 @@ export const DonationsListView = ({
       if (modeFilter !== 'all' && d.paymentMode !== modeFilter) return false;
 
       // Sheet filter
-      if (sheetFilter !== 'all' && d.googleSheetStatus !== sheetFilter) return false;
+      if (sheetFilter !== 'all' && (sheetFilter === 'pending' ? d.googleSheetStatus === 'synced' : d.googleSheetStatus !== sheetFilter)) return false;
 
       // Tax 80G filter
       if (taxFilter === '80g' && !d.is80GEligible) return false;
@@ -75,7 +75,7 @@ export const DonationsListView = ({
   const summary = useMemo(() => ({
     total: donations.reduce((sum, d) => sum + Number(d.amount || 0), 0),
     synced: donations.filter(d => d.googleSheetStatus === 'synced').length,
-    pending: donations.filter(d => d.googleSheetStatus === 'pending').length
+    pending: donations.filter(d => d.googleSheetStatus !== 'synced').length
   }), [donations]);
 
   const handleDelete = (id, receiptNo) => {
@@ -344,7 +344,7 @@ export const DonationsListView = ({
                       {d.googleSheetStatus === 'synced' ? (
                         <span
                           className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-medium border border-emerald-200"
-                          title={`Synced into Google Sheet (Row #${d.googleSheetRowId || '2'})`}
+                          title={d.googleSheetRowId ? `Synced into Google Sheet (Row #${d.googleSheetRowId})` : 'Recorded as synced'}
                         >
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                           <span>Synced</span>

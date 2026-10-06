@@ -69,7 +69,7 @@ export const GoogleSheetSyncHub = ({
       } else {
         setTimeout(() => {
           setTestResult(
-            'Local Sheet Sync Engine is active. (Optional: paste your Google Apps Script URL below to sync to a live external Google Sheet).'
+            'Google Sheets webhook is not configured.'
           );
         }, 500);
       }
@@ -279,7 +279,7 @@ function doPost(e) {
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Automated two-way ledger synchronization: every new donation is immediately appended as a row in your Google Sheet.
+              Submit donation sync requests to your configured Google Apps Script webhook. Confirmation requires checking Sheets or the script logs.
             </p>
           </div>
         </div>
@@ -322,7 +322,7 @@ function doPost(e) {
             {pendingDonations.length}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">
-            {pendingDonations.length === 0 ? 'All records are up to date' : 'Awaiting sync trigger'}
+            {pendingDonations.length === 0 ? 'No pending requests' : 'Awaiting sync or confirmation'}
           </div>
         </div>
 
@@ -338,13 +338,13 @@ function doPost(e) {
         </div>
       </div>
 
-      {/* Google Sheet Live View / Mirror Simulation */}
+      {/* Local records; not a readback from Google Sheets. */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-emerald-500" />
             <h3 className="text-sm font-bold text-slate-900">
-              Live Google Sheet Ledger Mirror [{settings.googleSheetsSheetName}]
+              Local Donation Ledger [{settings.googleSheetsSheetName}]
             </h3>
           </div>
           <span className="text-[11px] text-slate-500 font-mono">
@@ -428,7 +428,7 @@ function doPost(e) {
                 className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 font-mono"
               />
               <p className="text-[11px] text-slate-400 mt-1">
-                Leave blank to use the built-in local sync engine, or paste your Google Apps Script URL for instant direct sync to your live Google Sheet.
+                Enter your Google Apps Script webhook URL. An empty URL cannot sync donations to Google Sheets.
               </p>
             </div>
 

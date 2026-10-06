@@ -24,6 +24,7 @@ export const DashboardView = ({
   // Key figures
   const totalAmount = donations.reduce((sum, d) => sum + d.amount, 0);
   const totalCount = donations.length;
+  const attentionCount = donations.filter((d) => d.googleSheetStatus !== 'synced' || ['failed', 'queued'].includes(d.emailStatus)).length;
 
   const currentMonthStr = new Date().toISOString().slice(0, 7);
   const thisMonthDonations = donations.filter((d) => d.date.startsWith(currentMonthStr));
@@ -139,10 +140,10 @@ export const DashboardView = ({
           </div>
           <div>
             <div className="font-heading tabular-nums text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mt-2">
-              0
+              {attentionCount}
             </div>
             <div className="text-[11px] text-slate-400 mt-1">
-              All delivery tasks up to date
+              {attentionCount ? 'Sync or email confirmation pending' : 'No pending sync or email requests'}
             </div>
           </div>
         </div>

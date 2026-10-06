@@ -58,7 +58,7 @@ export const ReportsView = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200">
         <div>
           <div className="flex items-center gap-2 text-xs text-sky-700 font-semibold mb-1">
-            <span>Income Tax Compliance</span>
+            <span>Donation reporting</span>
             <span aria-hidden="true">·</span>
             <span>Section 80G(5)(vi)</span>
             <span aria-hidden="true">·</span>
@@ -68,7 +68,7 @@ export const ReportsView = ({
             80G Tax Exemption & Financial Reports
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Audit-ready statement generation for CBDT quarterly / annual compliance, donor certificates, and ledger analysis.
+            Donation summaries and exports for review.
           </p>
         </div>
 
@@ -91,24 +91,24 @@ export const ReportsView = ({
             {formatIndianCurrency(total80GAmount)}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">
-            {eligible80G.length} of {donations.length} total receipts qualify
+            {eligible80G.length} of {donations.length} receipts marked eligible
           </div>
         </div>
 
         <div className="bg-white p-5 rounded-xl border border-slate-200">
           <div className="text-xs text-slate-500 mb-1">Unique Registration No (URN)</div>
           <div className="text-lg font-bold text-sky-700 font-mono tracking-wide">
-            {settings.reg80GNumber}
+            {settings.reg80GNumber || 'Not configured'}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">
-            Order Date: 15/05/2023 · Income Tax Department
+            Enter verified registration details in NGO settings
           </div>
         </div>
 
         <div className="bg-white p-5 rounded-xl border border-slate-200">
-          <div className="text-xs text-slate-500 mb-1">PAN Validation Status</div>
+          <div className="text-xs text-slate-500 mb-1">Donor PAN Details</div>
           <div className="text-lg font-bold text-emerald-600 font-mono">
-            {donations.filter((d) => d.donorPan).length} Valid PAN Records
+            {donations.filter((d) => d.donorPan).length} Records with PAN
           </div>
           <div className="text-[11px] text-slate-400 mt-1">
             Mandatory for CBDT Form 10BD generation
@@ -122,7 +122,7 @@ export const ReportsView = ({
           <div className="flex items-center gap-2">
             <FileCheck className="w-4 h-4 text-sky-600" />
             <h3 className="text-sm font-bold text-slate-900">
-              Form 10BD Donor Statement (CBDT Prescribed Format)
+              Donor Statement for Review
             </h3>
           </div>
           <span className="text-[11px] text-slate-500">
@@ -167,9 +167,9 @@ export const ReportsView = ({
         </div>
 
         <div className="p-3 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 flex items-center justify-between">
-          <span>Ready for e-filing through the Income Tax Portal (Form 10BD JSON/CSV utility)</span>
+          <span>Review registration details and export before filing</span>
           <span className="font-mono font-bold text-slate-800">
-            Total 80G Deductible: {formatIndianCurrency(total80GAmount)}
+            Total marked eligible: {formatIndianCurrency(total80GAmount)}
           </span>
         </div>
       </div>

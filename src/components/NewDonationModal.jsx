@@ -146,10 +146,7 @@ export const NewDonationModal = ({
         }
       }
 
-      // 3. AUTO-DISPATCH EMAIL
-      if (autoEmailReceipt && generated.donorEmail) {
-        StorageService.recordEmailSent(generated.id);
-      }
+      // Email delivery is tracked only when an actual request is submitted.
 
       // Trigger Confetti
       try {
@@ -219,7 +216,6 @@ export const NewDonationModal = ({
       .replace('{REG_80G}', settings.reg80GNumber)
       .replace('{DONOR_PAN}', d.donorPan || 'Not Specified');
 
-    StorageService.recordEmailSent(d.id);
     const mailtoUrl = `mailto:${d.donorEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailtoUrl;
   };
@@ -310,7 +306,7 @@ export const NewDonationModal = ({
                     <span className="font-bold text-slate-900 block leading-tight">3. Donor Email</span>
                     <span className="text-[11px] text-emerald-700 truncate block max-w-[190px]">
                       {submittedDonation.donorEmail
-                        ? `Auto-dispatched to ${submittedDonation.donorEmail}`
+                        ? `Email pending for ${submittedDonation.donorEmail}`
                         : 'No email provided'}
                     </span>
                   </div>
@@ -322,7 +318,7 @@ export const NewDonationModal = ({
                   <div>
                     <span className="font-bold text-slate-900 block leading-tight">4. Google Sheet Sync</span>
                     <span className="text-[11px] text-emerald-700">
-                      Auto-synced into {settings.googleSheetsSheetName}
+                      {settings.isGoogleSheetAutoSync ? 'Sync request scheduled; confirmation pending' : 'Automatic sync is off'}
                     </span>
                   </div>
                 </div>

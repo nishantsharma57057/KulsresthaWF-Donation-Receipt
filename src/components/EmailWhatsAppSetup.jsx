@@ -211,26 +211,14 @@ function doPost(e) {
 
   const handleTestWhatsApp = () => {
     const cleanPhone = whatsappNumber.replace(/[^0-9]/g, '');
-    const sampleMsg = whatsappTemplate
-      .replace('{DONOR_NAME}', 'Nishant Sharma')
-      .replace('{AMOUNT}', '5,100')
-      .replace('{CAUSE}', 'Child Education')
-      .replace('{RECEIPT_NO}', 'KWF-202627-0108')
-      .replace('{DATE}', new Date().toISOString().slice(0, 10))
-      .replace('{PAYMENT_MODE}', 'UPI')
-      .replace('{TXN_ID}', 'UPI-261003-88219')
-      .replace('{RECEIPT_URL}', 'https://www.kulshresthawf.org/receipt?no=KWF-202627-0108');
-
-    const url = `https://api.whatsapp.com/send?phone=${cleanPhone || '919811234567'}&text=${encodeURIComponent(sampleMsg)}`;
-    window.open(url, '_blank');
+    if (!cleanPhone) { setTestEmailStatus('Enter your WhatsApp number first.'); return; }
+    const message = 'Kulshrestha Welfare Foundation: WhatsApp configuration test. No donation receipt is attached.';
+    const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const handleTestEmail = () => {
-    setTestEmailStatus('Sending test email trigger...');
-    setTimeout(() => {
-      setTestEmailStatus(`Email dispatch verified. Receipts will be sent under sender identity "${senderName} <${senderEmail}>".`);
-      setTimeout(() => setTestEmailStatus(null), 4000);
-    }, 600);
+    setTestEmailStatus('Delivery is not verified here. Submit a receipt email request and check the configured sender inbox and Apps Script execution logs.');
   };
 
   return (
