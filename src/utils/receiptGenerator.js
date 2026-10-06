@@ -65,7 +65,7 @@ export function generateDonationPdf(donation, settings = {}) {
     style(8.5,true,C.navy);doc.text('ONLINE DONATION RECEIPT',134,12);
     style(8.2,false,C.muted);doc.text('Receipt No.',134,20);doc.text('Issue Date',134,26);
     text(donation.receiptNo,164,20,34,8.5,true);
-    style(8.5,true);doc.text(dateLabel(donation.date),right,26,{align:'right'});
+    text(dateLabel(donation.date),164,26,34,8.5,true);
     style(22,true,C.navy,true);doc.text(continued?'RECEIPT CONTINUED':'DONATION',left,51);
     if(!continued) {
       const wordWidth=doc.getTextWidth('DONATION ');
