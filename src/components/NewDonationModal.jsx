@@ -1,3 +1,4 @@
+import { getReceiptShareUrl } from '../utils/receiptShare';
 import React, { useState } from 'react';
 import { StorageService } from '../services/storage';
 import { numberToIndianWords, formatIndianCurrency } from '../utils/numberToWords';
@@ -188,7 +189,7 @@ export const NewDonationModal = ({
       cleanPhone = '91' + cleanPhone;
     }
 
-    const receiptUrl = `https://www.kulshresthawf.org/receipt?no=${d.receiptNo}`;
+    const receiptUrl = getReceiptShareUrl(d);
     const text = settings.whatsappTemplate
       .replace('{DONOR_NAME}', d.donorName)
       .replace('{AMOUNT}', d.amount.toLocaleString('en-IN'))

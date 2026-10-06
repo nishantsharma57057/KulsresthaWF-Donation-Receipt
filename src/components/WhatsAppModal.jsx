@@ -1,19 +1,21 @@
+import { getReceiptShareUrl } from '../utils/receiptShare';
 import React, { useState } from 'react';
 import { StorageService } from '../services/storage';
 import { X, MessageCircle, Send, Copy, Check, ExternalLink, Clock } from 'lucide-react';
 
-export const WhatsAppModal = ({
+export const WhatsAppModal = props => props.donation ? <WhatsAppComposer key={props.donation.id} {...props} /> : null;
+
+const WhatsAppComposer = ({
   donation,
   settings,
   onClose,
   onSent
 }) => {
-  if (!donation) return null;
 
   const [phone, setPhone] = useState(donation.donorPhone);
   const [copied, setCopied] = useState(false);
 
-  const receiptUrl = `https://www.kulshresthawf.org/receipt?no=${donation.receiptNo}`;
+  const receiptUrl = getReceiptShareUrl(donation);
 
   const defaultMessage = settings.whatsappTemplate
     .replace('{DONOR_NAME}', donation.donorName)
@@ -62,7 +64,7 @@ export const WhatsAppModal = ({
                 Send Receipt via WhatsApp
               </h3>
               <p className="text-xs text-slate-500">
-                Direct WhatsApp transmission to donor with 80G receipt link
+                Send the donor a receipt link with PDF download
               </p>
             </div>
           </div>

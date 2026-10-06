@@ -1,3 +1,4 @@
+import { SharedReceiptPage } from './components/SharedReceiptPage.jsx';
 import React, { useState, useEffect } from 'react';
 import { StorageService } from './services/storage';
 import { FirestoreService } from './services/firestoreService';
@@ -17,6 +18,10 @@ import { ProfileDropdown } from './components/ProfileDropdown.jsx';
 import { Calendar, ChevronRight } from 'lucide-react';
 
 export default function App() {
+  return window.location.pathname === '/receipt' ? <SharedReceiptPage /> : <Workspace />;
+}
+
+function Workspace() {
   const [donations, setDonations] = useState(() => StorageService.getDonations());
   const [settings, setSettings] = useState(() => StorageService.getNgoSettings());
   const [currentUser, setCurrentUser] = useState(() => StorageService.getCurrentUser());
