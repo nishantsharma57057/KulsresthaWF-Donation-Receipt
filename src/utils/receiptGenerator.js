@@ -2,6 +2,7 @@ import { jsPDF } from 'jspdf';
 import { numberToIndianWords } from './numberToWords';
 import { PoppinsRegular, PoppinsSemiBold, MontserratBold } from '../assets/receiptFonts';
 import { receiptLogo } from '../assets/receiptLogo';
+import { trusteeSignature } from '../assets/trusteeSignature';
 import { resolveNgoProfile } from '../config/appConfig';
 
 const C = {
@@ -47,7 +48,7 @@ export function generateDonationPdf(donation, settings = {}) {
     const rows=lines(v,w,size,bold);style(size,bold,color);doc.text(rows,x,top);
     return rows.length*size*0.3528*1.35;
   }
-  function title(v,x,top) {style(8,true,C.navy,true);doc.text(v,x,top);}
+  function title(v,x,top) {style(9.5,true,C.navy,true);doc.text(v,x,top);}
   function heart(x,top,size=6) {
     doc.setFillColor(...C.cyan);doc.circle(x+size*.3,top+size*.3,size*.3,'F');
     doc.circle(x+size*.7,top+size*.3,size*.3,'F');
@@ -60,118 +61,119 @@ export function generateDonationPdf(donation, settings = {}) {
     doc.setFillColor(188,231,242);
     doc.path([{op:'m',c:[156,0]},{op:'c',c:[170,9,192,9,210,15]},{op:'l',c:[210,0]},{op:'h',c:[]}]).fill();
     doc.addImage(receiptLogo,'PNG',left,9,86,16.45);
-    style(7,true,C.teal);doc.text('CARE  •  DIGNITY  •  OPPORTUNITY  •  IMPACT',left,33);
-    style(7.5,true,C.navy);doc.text('ONLINE DONATION RECEIPT',134,12);
-    style(7,false,C.muted);doc.text('Receipt No.',134,20);doc.text('Issue Date',134,26);
-    text(donation.receiptNo,164,20,34,7.5,true);
-    style(7.5,true);doc.text(dateLabel(donation.date),right,26,{align:'right'});
-    style(21,true,C.navy,true);doc.text(continued?'RECEIPT CONTINUED':'DONATION',left,51);
+    style(8.3,true,C.teal);doc.text('CARE  •  DIGNITY  •  OPPORTUNITY  •  IMPACT',left,33);
+    style(8.5,true,C.navy);doc.text('ONLINE DONATION RECEIPT',134,12);
+    style(8.2,false,C.muted);doc.text('Receipt No.',134,20);doc.text('Issue Date',134,26);
+    text(donation.receiptNo,164,20,34,8.5,true);
+    style(8.5,true);doc.text(dateLabel(donation.date),right,26,{align:'right'});
+    style(22,true,C.navy,true);doc.text(continued?'RECEIPT CONTINUED':'DONATION',left,51);
     if(!continued) {
       const wordWidth=doc.getTextWidth('DONATION ');
-      style(21,true,C.teal,true);doc.text('RECEIPT',left+wordWidth,51);
+      style(22,true,C.teal,true);doc.text('RECEIPT',left+wordWidth,51);
     }
     style(9,true,C.muted);doc.text('Thank you for your generous support.',left,59);
     doc.setFillColor(227,247,240);doc.roundedRect(167,47,31,8,4,4,'F');
     doc.setFillColor(14,145,106);doc.circle(171,51,1,'F');
-    style(6.7,true,[14,145,106]);doc.text('RECORDED',174,52);
-    y=70;
+    style(8,true,[14,145,106]);doc.text('RECORDED',174,52);
+    y=66;
   }
   function room(height) {
     if(y+height>269){doc.addPage();header(true);}
   }
   header();
-  const nameRows=lines(donation.donorName,100,13,true);
-  const mailRows=lines(donation.donorEmail,100,7.5);
+  const nameRows=lines(donation.donorName,100,15,true);
+  const mailRows=lines(donation.donorEmail,100,9.5);
   const words=numberToIndianWords(amount);
-  const wordRows=lines(words,61,7.1);
-  const summaryHeight=Math.max(38,18+nameRows.length*6+mailRows.length*4,25+wordRows.length*3.5);
+  const wordRows=lines(words,61,8.5);
+  const summaryHeight=Math.max(39,20+nameRows.length*7+mailRows.length*4.5,27+wordRows.length*4.1);
   doc.setFillColor(246,251,254);doc.setDrawColor(...C.line);
   doc.roundedRect(left,y,width,summaryHeight,4,4,'FD');
   doc.setFillColor(...C.cyan);doc.roundedRect(left,y,2.3,summaryHeight,1,1,'F');
-  style(7,true,C.muted);doc.text('RECEIVED FROM',left+8,y+10);
-  style(13,true,C.navy);doc.text(nameRows,left+8,y+18);
-  let contactY=y+18+nameRows.length*6;
-  style(7.5,false,C.muted);doc.text(mailRows,left+8,contactY);
-  doc.text(value(donation.donorPhone),left+8,contactY+mailRows.length*4+1);
+  style(8.5,true,C.muted);doc.text('RECEIVED FROM',left+8,y+10);
+  style(15,true,C.navy);doc.text(nameRows,left+8,y+18);
+  let contactY=y+18+nameRows.length*7;
+  style(9.5,false,C.muted);doc.text(mailRows,left+8,contactY);
+  doc.text(value(donation.donorPhone),left+8,contactY+mailRows.length*4.5+1);
   const ax=126;
   doc.setFillColor(...C.white);doc.roundedRect(ax,y+4,67,summaryHeight-8,4,4,'FD');
-  style(7,true,C.muted);doc.text('DONATION AMOUNT',ax+5,y+13);
+  style(8.5,true,C.muted);doc.text('DONATION AMOUNT',ax+5,y+13);
   const formatted=amount.toLocaleString('en-IN',{maximumFractionDigits:2});
-  let fontSize=20;
+  let fontSize=24;
   style(fontSize,true,C.teal);
   while(doc.getTextWidth('₹ '+formatted)>57&&fontSize>10){fontSize--;style(fontSize,true,C.teal);}
   doc.text('₹ '+formatted,ax+5,y+23);
-  style(7.1,false,C.muted);doc.text(wordRows,ax+5,y+29);
-  y+=summaryHeight+10;
+  style(8.5,false,C.muted);doc.text(wordRows,ax+5,y+29);
+  y+=summaryHeight+8;
 
   title('DONOR DETAILS',left,y);title('PAYMENT DETAILS',108,y);
   doc.setDrawColor(...C.line);doc.line(left,y+2,102,y+2);doc.line(108,y+2,right,y+2);
   doc.setDrawColor(...C.cyan);doc.setLineWidth(.6);doc.line(left,y+2,left+12,y+2);doc.line(108,y+2,120,y+2);
-  doc.setLineWidth(.2);y+=11;
+  doc.setLineWidth(.2);y+=9;
   const pairs=[
     [['Name',donation.donorName],['Transaction ID',donation.transactionId]],
     [['Mobile',donation.donorPhone],['Method',donation.paymentMode]],
     [['Email',donation.donorEmail],['Date / Time',[dateLabel(donation.date),donation.time].filter(Boolean).join(', ')]]
   ];
   for(const [a,b] of pairs) {
-    const aa=lines(a[1],60,8.5,true),bb=lines(b[1],57,8.5,true);
+    const aa=lines(a[1],60,10,true),bb=lines(b[1],57,10,true);
     for(let offset=0;offset<Math.max(aa.length,bb.length);offset+=25) {
       const la=aa.slice(offset,offset+25),lb=bb.slice(offset,offset+25);
-      const height=Math.max(8,Math.max(la.length,lb.length)*4.2+3);
-      room(height);style(7.3,true,C.muted);
+      const height=Math.max(9,Math.max(la.length,lb.length)*4.8+2);
+      room(height);style(8.5,true,C.muted);
       doc.text(a[0],left,y);doc.text(b[0],108,y);
-      style(8.5,true);if(la.length)doc.text(la,left+30,y);if(lb.length)doc.text(lb,141,y);
+      style(10,true);if(la.length)doc.text(la,left+30,y);if(lb.length)doc.text(lb,141,y);
       y+=height;
     }
   }
-  const addr=lines(address(donation.donorAddress,donation.donorCity,donation.donorState,donation.donorPincode),90,7.8);
-  const cause=lines(donation.cause,57,8.5,true);
+  const addr=lines(address(donation.donorAddress,donation.donorCity,donation.donorState,donation.donorPincode),90,9.5);
+  const cause=lines(donation.cause,57,10,true);
   for(let offset=0;offset<Math.max(addr.length,cause.length);offset+=25) {
     const aa=addr.slice(offset,offset+25),bb=cause.slice(offset,offset+25);
-    const height=Math.max(aa.length*4+6,bb.length*4.2+3);
-    room(height);style(7.3,true,C.muted);doc.text('Address',left,y);doc.text('Purpose',108,y);
-    style(7.8,false);if(aa.length)doc.text(aa,left,y+5);
-    style(8.5,true);if(bb.length)doc.text(bb,141,y);y+=height;
+    const height=Math.max(aa.length*4.5+6,bb.length*4.8+2);
+    room(height);style(8.5,true,C.muted);doc.text('Address',left,y);doc.text('Purpose',108,y);
+    style(9.5,false);if(aa.length)doc.text(aa,left,y+5);
+    style(10,true);if(bb.length)doc.text(bb,141,y);y+=height;
   }
   if(donation.donorPan) {
-    room(8);style(7.3,true,C.muted);doc.text('Donor PAN',left,y);
-    y+=text(donation.donorPan,left+30,y,60,8,true)+3;
+    room(9);style(8.5,true,C.muted);doc.text('Donor PAN',left,y);
+    y+=text(donation.donorPan,left+30,y,60,9.5,true)+3;
   }
-  y+=2;room(23);
-  doc.setFillColor(...C.pale);doc.roundedRect(left,y,width,19,4,4,'F');
-  style(8,true,C.teal);doc.text('YOUR SUPPORT CREATES REAL CHANGE',left+6,y+7);
-  style(7.8,false);doc.text('Every contribution helps us extend care, opportunity and dignity to more people.',left+6,y+14);
-  heart(right-15,y+6);y+=26;
+  y+=2;room(21);
+  doc.setFillColor(...C.pale);doc.roundedRect(left,y,width,17,4,4,'F');
+  style(9,true,C.teal);doc.text('YOUR SUPPORT CREATES REAL CHANGE',left+6,y+7);
+  style(8.5,false);doc.text('Every contribution helps us extend care, opportunity and dignity to more people.',left+6,y+13);
+  heart(right-15,y+5);y+=23;
 
   const orgRows=[['NGO PAN',settings.pan],['Registration No.',settings.cin],
     ...(settings.reg80GNumber?[['80G Reg. No.',settings.reg80GNumber]]:[]),
     ...(settings.reg12ANumber?[['12A Reg. No.',settings.reg12ANumber]]:[])];
   const officeRows=[
-    ...lines(settings.orgName,83,7.5),
-    ...lines(address(settings.address,settings.city,settings.state,settings.pincode),83,7.5),
-    ...lines('Mobile: '+value(settings.phone),83,7.5),
-    ...lines(settings.email,83,7.5),
-    ...lines(settings.website,83,7.5)
+    ...lines(settings.orgName,83,9.5),
+    ...lines(address(settings.address,settings.city,settings.state,settings.pincode),83,9.5),
+    ...lines('Mobile: '+value(settings.phone),83,9.5),
+    ...lines(settings.email,83,9.5),
+    ...lines(settings.website,83,9.5)
   ];
-  const taxHeight=15+orgRows.reduce((h,r)=>h+Math.max(7,lines(r[1],60,7.5,true).length*3.6+3),0);
-  const officeHeight=13+officeRows.length*3.6+3;
+  const taxHeight=15+orgRows.reduce((h,r)=>h+Math.max(7,lines(r[1],60,9,true).length*4.3+2),0);
+  const officeHeight=13+officeRows.length*4.5+2;
   const boxHeight=Math.max(33,taxHeight,officeHeight);
   room(boxHeight+5);doc.setDrawColor(...C.line);doc.roundedRect(left,y,width,boxHeight,4,4,'S');
   doc.line(107,y+5,107,y+boxHeight-5);
   title('FOUNDATION DETAILS',left+5,y+8);title('REGISTERED OFFICE',113,y+8);
   let rowY=y+16;
   for(const [label,v] of orgRows) {
-    style(6.5,true,C.muted);doc.text(label,left+5,rowY);
-    rowY+=Math.max(7,text(v,left+32,rowY,60,7.5,true)+3);
+    style(8,true,C.muted);doc.text(label,left+5,rowY);
+    rowY+=Math.max(7,text(v,left+32,rowY,60,9,true)+2);
   }
-  style(7.5,false);doc.text(officeRows,113,y+16);y+=boxHeight+9;
+  style(9.5,false);doc.text(officeRows,113,y+16);y+=boxHeight+6;
   room(28);
-  style(7,true,C.teal);doc.text('COMPUTER GENERATED RECEIPT',left,y);
-  text('This receipt is generated electronically from the donation record. Please retain it for your records.',left,y+6,110,7.3,false,C.muted);
-  style(8.5,true,C.navy);doc.text('Thank you for helping us build a brighter tomorrow.',left,y+19);
-  doc.setDrawColor(...C.muted);doc.line(143,y+12,right,y+12);
-  style(7.5,true);doc.text(value(settings.signatoryName),143,y+18);
-  style(7,false,C.muted);doc.text(value(settings.signatoryTitle)+' · Authorized Signatory',143,y+23);
+  style(8,true,C.teal);doc.text('COMPUTER GENERATED RECEIPT',left,y);
+  text('This receipt is generated electronically from the donation record. Please retain it for your records.',left,y+6,110,8.5,false,C.muted);
+  style(9,true,C.navy);doc.text('Thank you for helping us build a brighter tomorrow.',left,y+19);
+  doc.addImage(trusteeSignature,'PNG',143,y-1,53,18);
+  doc.setDrawColor(...C.muted);doc.line(143,y+17,right,y+17);
+  style(9,true);doc.text(value(settings.signatoryName),143,y+22);
+  style(8,false,C.muted);doc.text(value(settings.signatoryTitle)+' · Authorized Signatory',143,y+27);
 
   const pages=doc.getNumberOfPages();
   for(let p=1;p<=pages;p++) {
@@ -181,8 +183,8 @@ export function generateDonationPdf(donation, settings = {}) {
     doc.setFillColor(...C.cyan);
     doc.path([{op:'m',c:[0,280]},{op:'c',c:[60,271,110,284,210,278]},
       {op:'l',c:[210,297]},{op:'l',c:[0,297]},{op:'h',c:[]}]).fill();
-    style(7,true,C.white);doc.text('PEOPLE  •  CARE  •  OPPORTUNITIES  •  BRIGHTER TOMORROWS',left,287);
-    style(6.5,true,C.white);doc.text(value(donation.receiptNo),right,287,{align:'right'});
+    style(8,true,C.white);doc.text('PEOPLE  •  CARE  •  OPPORTUNITIES  •  BRIGHTER TOMORROWS',left,287);
+    style(7.5,true,C.white);doc.text(value(donation.receiptNo),right,287,{align:'right'});
     if(pages>1){style(6,false,C.white);doc.text('Page '+p+' of '+pages,right,292,{align:'right'});}
   }
   doc.setPage(1);return doc;
