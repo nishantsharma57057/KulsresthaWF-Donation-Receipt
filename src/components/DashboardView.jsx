@@ -55,7 +55,7 @@ export const DashboardView = ({
             EVERY CONTRIBUTION COUNTS
           </span>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">
-            Donation overvieww
+            Donation overview
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
             A clear picture of your impact, all in one place.
