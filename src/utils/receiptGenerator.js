@@ -81,10 +81,12 @@ export function generateDonationPdf(donation, settings = {}) {
     if(y+height>269){doc.addPage();header(true);}
   }
   header();
-  const nameRows=lines(donation.donorName,100,15,true);
-  const mailRows=lines(donation.donorEmail,100,9.5);
+  const amountX=104,amountWidth=89,amountTextWidth=amountWidth-10;
+  const donorTextWidth=amountX-(left+8)-8;
+  const nameRows=lines(donation.donorName,donorTextWidth,15,true);
+  const mailRows=lines(donation.donorEmail,donorTextWidth,9.5);
   const words=numberToIndianWords(amount);
-  const wordRows=lines(words,61,8.5);
+  const wordRows=lines(words,amountTextWidth,8.5);
   const summaryHeight=Math.max(39,20+nameRows.length*7+mailRows.length*4.5,27+wordRows.length*4.1);
   doc.setFillColor(246,251,254);doc.setDrawColor(...C.line);
   doc.roundedRect(left,y,width,summaryHeight,4,4,'FD');
@@ -94,13 +96,13 @@ export function generateDonationPdf(donation, settings = {}) {
   let contactY=y+18+nameRows.length*7;
   style(9.5,false,C.muted);doc.text(mailRows,left+8,contactY);
   doc.text(value(donation.donorPhone),left+8,contactY+mailRows.length*4.5+1);
-  const ax=126;
-  doc.setFillColor(...C.white);doc.roundedRect(ax,y+4,67,summaryHeight-8,4,4,'FD');
+  const ax=amountX;
+  doc.setFillColor(...C.white);doc.roundedRect(ax,y+4,amountWidth,summaryHeight-8,4,4,'FD');
   style(8.5,true,C.muted);doc.text('DONATION AMOUNT',ax+5,y+13);
   const formatted=amount.toLocaleString('en-IN',{maximumFractionDigits:2});
   let fontSize=24;
   style(fontSize,true,C.teal);
-  while(doc.getTextWidth('₹ '+formatted)>57&&fontSize>10){fontSize--;style(fontSize,true,C.teal);}
+  while(doc.getTextWidth('₹ '+formatted)>amountTextWidth&&fontSize>10){fontSize--;style(fontSize,true,C.teal);}
   doc.text('₹ '+formatted,ax+5,y+23);
   style(8.5,false,C.muted);doc.text(wordRows,ax+5,y+29);
   y+=summaryHeight+8;
@@ -125,13 +127,13 @@ export function generateDonationPdf(donation, settings = {}) {
       y+=height;
     }
   }
-  const addr=lines(address(donation.donorAddress,donation.donorCity,donation.donorState,donation.donorPincode),90,9.5);
+  const addr=lines(address(donation.donorAddress,donation.donorCity,donation.donorState,donation.donorPincode),60,9.5);
   const cause=lines(donation.cause,57,10,true);
   for(let offset=0;offset<Math.max(addr.length,cause.length);offset+=25) {
     const aa=addr.slice(offset,offset+25),bb=cause.slice(offset,offset+25);
-    const height=Math.max(aa.length*4.5+6,bb.length*4.8+2);
+    const height=Math.max(9,aa.length*4.6+2,bb.length*4.8+2);
     room(height);style(8.5,true,C.muted);doc.text('Address',left,y);doc.text('Purpose',108,y);
-    style(9.5,false);if(aa.length)doc.text(aa,left,y+5);
+    style(9.5,false);if(aa.length)doc.text(aa,left+30,y);
     style(10,true);if(bb.length)doc.text(bb,141,y);y+=height;
   }
   if(donation.donorPan) {
