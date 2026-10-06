@@ -109,13 +109,13 @@ export const DonationsListView = ({
     taxFilter !== 'all';
 
   return (
-    <div className="kwf-donations space-y-5 pb-12">
+    <div className="kwf-donations space-y-5 pb-12 font-sans">
       
       {/* Header Bar */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-600">Foundation workspace</p>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Donations Ledger & Records</h1>
+          <h1 className="font-heading text-xl sm:text-2xl font-bold text-slate-900">Donations Ledger & Records</h1>
           <p className="text-xs text-slate-500">
             Manage your donations, receipts and donor communications in one place.
           </p>
@@ -250,7 +250,7 @@ export const DonationsListView = ({
 
       {/* Main Table */}
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4 border-b border-slate-100"><h2 className="text-sm font-semibold text-slate-900">Donation records <span className="ml-2 rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-700">{filteredDonations.length}</span></h2></div>
+        <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4 border-b border-slate-100"><h2 className="font-heading text-sm font-semibold text-slate-900">Donation records <span className="ml-2 rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-700">{filteredDonations.length}</span></h2></div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
@@ -287,7 +287,7 @@ export const DonationsListView = ({
                     <td className="py-3 px-4">
                       <button
                         onClick={() => onSelectDonation(d)}
-                        className="font-mono font-bold text-sky-700 hover:text-sky-800 hover:underline text-left block"
+                        className="font-sans tabular-nums font-bold text-sky-700 hover:text-sky-800 hover:underline text-left block whitespace-nowrap"
                       >
                         {d.receiptNo}
                       </button>
@@ -296,7 +296,7 @@ export const DonationsListView = ({
                     {/* Date */}
                     <td className="py-3 px-4 whitespace-nowrap text-slate-600">
                       <div>{d.date}</div>
-                      <div className="text-[10px] text-slate-400 font-mono">{d.time}</div>
+                      <div className="text-[10px] text-slate-400 font-sans tabular-nums">{d.time}</div>
                     </td>
 
                     {/* Donor Info */}
@@ -309,7 +309,7 @@ export const DonationsListView = ({
                     {/* PAN (80G) */}
                     <td className="py-3 px-4 whitespace-nowrap">
                       {d.donorPan ? (
-                        <span className="font-mono text-xs font-semibold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded">
+                        <span className="font-sans tabular-nums text-xs font-semibold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded">
                           {d.donorPan}
                         </span>
                       ) : (
@@ -326,7 +326,7 @@ export const DonationsListView = ({
 
                     {/* Amount */}
                     <td className="py-3 px-4 text-right">
-                      <span className="font-mono font-bold text-slate-900 text-sm">
+                      <span className="font-sans tabular-nums font-bold text-slate-900 text-sm">
                         ₹{d.amount.toLocaleString('en-IN')}
                       </span>
                     </td>
@@ -334,7 +334,7 @@ export const DonationsListView = ({
                     {/* Payment Mode */}
                     <td className="py-3 px-4 whitespace-nowrap">
                       <div className="font-medium text-slate-800">{d.paymentMode}</div>
-                      <div className="text-[10px] font-mono text-slate-400 truncate max-w-[120px]">
+                      <div className="text-[10px] font-sans tabular-nums text-slate-400 truncate max-w-[120px]">
                         {d.transactionId}
                       </div>
                     </td>
@@ -386,7 +386,7 @@ export const DonationsListView = ({
             Showing <strong className="text-slate-800">{filteredDonations.length}</strong> of{' '}
             <strong className="text-slate-800">{donations.length}</strong> total donations
           </span>
-          <span className="font-mono font-bold text-slate-800">
+          <span className="font-sans tabular-nums font-bold text-slate-800">
             Total: {formatIndianCurrency(filteredDonations.reduce((sum, d) => sum + d.amount, 0))}
           </span>
         </div>
