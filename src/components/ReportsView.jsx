@@ -52,7 +52,7 @@ export const ReportsView = ({
     .slice(0, 5);
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 font-sans">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200">
@@ -64,7 +64,7 @@ export const ReportsView = ({
             <span aria-hidden="true">·</span>
             <span>Form 10BD</span>
           </div>
-          <h1 className="text-xl font-bold text-slate-900">
+          <h1 className="font-heading text-xl font-bold text-slate-900">
             80G Tax Exemption & Financial Reports
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -87,7 +87,7 @@ export const ReportsView = ({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-xl border border-slate-200">
           <div className="text-xs text-slate-500 mb-1">80G Eligible Donations</div>
-          <div className="text-2xl font-bold text-slate-900 font-mono tabular-nums">
+          <div className="text-2xl font-bold text-slate-900 font-sans tabular-nums">
             {formatIndianCurrency(total80GAmount)}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">
@@ -97,7 +97,7 @@ export const ReportsView = ({
 
         <div className="bg-white p-5 rounded-xl border border-slate-200">
           <div className="text-xs text-slate-500 mb-1">Unique Registration No (URN)</div>
-          <div className="text-lg font-bold text-sky-700 font-mono tracking-wide">
+          <div className="text-lg font-bold text-sky-700 font-sans tabular-nums tracking-wide">
             {settings.reg80GNumber || 'Not configured'}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">
@@ -107,7 +107,7 @@ export const ReportsView = ({
 
         <div className="bg-white p-5 rounded-xl border border-slate-200">
           <div className="text-xs text-slate-500 mb-1">Donor PAN Details</div>
-          <div className="text-lg font-bold text-emerald-600 font-mono">
+          <div className="text-lg font-bold text-emerald-600 font-sans tabular-nums">
             {donations.filter((d) => d.donorPan).length} Records with PAN
           </div>
           <div className="text-[11px] text-slate-400 mt-1">
@@ -121,7 +121,7 @@ export const ReportsView = ({
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <FileCheck className="w-4 h-4 text-sky-600" />
-            <h3 className="text-sm font-bold text-slate-900">
+            <h3 className="font-heading text-sm font-bold text-slate-900">
               Donor Statement for Review
             </h3>
           </div>
@@ -136,7 +136,7 @@ export const ReportsView = ({
               <tr>
                 <th className="py-3 px-4">Sl</th>
                 <th className="py-3 px-4">Donor Name</th>
-                <th className="py-3 px-4 font-mono">Donor PAN</th>
+                <th className="py-3 px-4 font-sans tabular-nums">Donor PAN</th>
                 <th className="py-3 px-4">Address</th>
                 <th className="py-3 px-4">Mode</th>
                 <th className="py-3 px-4 text-right">Amount (₹)</th>
@@ -145,11 +145,11 @@ export const ReportsView = ({
             <tbody className="divide-y divide-slate-100">
               {eligible80G.map((d, index) => (
                 <tr key={d.id} className="hover:bg-slate-50/70">
-                  <td className="py-2.5 px-4 text-slate-400 font-mono">{index + 1}</td>
+                  <td className="py-2.5 px-4 text-slate-400 font-sans tabular-nums">{index + 1}</td>
                   <td className="py-2.5 px-4 font-semibold text-slate-900 truncate max-w-[150px]">
                     {d.donorName}
                   </td>
-                  <td className="py-2.5 px-4 font-mono font-bold text-slate-800">
+                  <td className="py-2.5 px-4 font-sans tabular-nums font-bold text-slate-800">
                     {d.donorPan || 'PENDING'}
                   </td>
                   <td className="py-2.5 px-4 text-slate-600 truncate max-w-[180px]">
@@ -157,7 +157,7 @@ export const ReportsView = ({
                   </td>
 
                   <td className="py-2.5 px-4 text-slate-600">{d.paymentMode}</td>
-                  <td className="py-2.5 px-4 text-right font-mono font-bold text-slate-900">
+                  <td className="py-2.5 px-4 text-right font-sans tabular-nums font-bold text-slate-900">
                     ₹{d.amount.toLocaleString('en-IN')}
                   </td>
                 </tr>
@@ -168,7 +168,7 @@ export const ReportsView = ({
 
         <div className="p-3 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 flex items-center justify-between">
           <span>Review registration details and export before filing</span>
-          <span className="font-mono font-bold text-slate-800">
+          <span className="font-sans tabular-nums font-bold text-slate-800">
             Total marked eligible: {formatIndianCurrency(total80GAmount)}
           </span>
         </div>
@@ -180,7 +180,7 @@ export const ReportsView = ({
         {/* Top Donors Leaderboard */}
         <div className="bg-white p-5 rounded-xl border border-slate-200">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-slate-900">Top Donors & Benefactors</h3>
+            <h3 className="font-heading text-sm font-bold text-slate-900">Top Donors & Benefactors</h3>
             <Award className="w-4 h-4 text-amber-500" />
           </div>
 
@@ -188,7 +188,7 @@ export const ReportsView = ({
             {topDonors.map((donor, idx) => (
               <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100 text-xs">
                 <div className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-xs font-mono">
+                  <span className="w-6 h-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-xs font-sans tabular-nums">
                     {idx + 1}
                   </span>
                   <div>
@@ -197,7 +197,7 @@ export const ReportsView = ({
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-mono font-bold text-slate-900 text-sm">
+                  <p className="font-sans tabular-nums font-bold text-slate-900 text-sm">
                     {formatIndianCurrency(donor.total)}
                   </p>
                   <p className="text-[10px] text-slate-400">{donor.count} Contribution(s)</p>
@@ -210,7 +210,7 @@ export const ReportsView = ({
         {/* Payment Modes Breakdown */}
         <div className="bg-white p-5 rounded-xl border border-slate-200">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-slate-900">Payment Modes & Channels</h3>
+            <h3 className="font-heading text-sm font-bold text-slate-900">Payment Modes & Channels</h3>
             <CreditCard className="w-4 h-4 text-sky-600" />
           </div>
 
@@ -222,7 +222,7 @@ export const ReportsView = ({
                 <div key={mode} className="text-xs space-y-1">
                   <div className="flex items-center justify-between text-slate-700">
                     <span className="font-semibold">{mode}</span>
-                    <span className="font-mono font-bold text-slate-900">{formatIndianCurrency(amt)}</span>
+                    <span className="font-sans tabular-nums font-bold text-slate-900">{formatIndianCurrency(amt)}</span>
                   </div>
                   <div className="flex items-center justify-between text-[11px] text-slate-400">
                     <span>{pct}% of total</span>
