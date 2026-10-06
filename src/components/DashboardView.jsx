@@ -46,7 +46,7 @@ export const DashboardView = ({
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="kwf-dashboard space-y-7 pb-8">
       
       {/* Top Section: Title & Actions (Image 2) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -54,7 +54,7 @@ export const DashboardView = ({
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.16em] block">
             EVERY CONTRIBUTION COUNTS
           </span>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mt-2">
             Donation overview
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -81,7 +81,7 @@ export const DashboardView = ({
           onClick={() => onNavigateTab('donations')}
           className="text-xs font-semibold text-sky-700 hover:text-sky-900 hover:underline"
         >
-          Explore sample data
+          View donation records
         </button>
       </div>
 
@@ -89,7 +89,7 @@ export const DashboardView = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Card 1: Total contributions (Dark Navy Background! Image 2) */}
-        <div className="bg-[#0e2a47] text-white rounded-xl p-5 shadow-sm border border-slate-800 flex flex-col justify-between min-h-[125px]">
+        <div className="kwf-stat kwf-stat-primary bg-[#0e2a47] text-white rounded-xl p-5 shadow-sm border border-slate-800 flex flex-col justify-between min-h-[125px]">
           <div className="flex items-center justify-between text-xs text-slate-300">
             <span>Total contributions</span>
             <div className="w-7 h-7 rounded-full bg-slate-800/80 flex items-center justify-center text-xs font-bold text-slate-300">
@@ -97,7 +97,7 @@ export const DashboardView = ({
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-white mt-2">
+            <div className="font-heading tabular-nums text-2xl sm:text-3xl font-bold tracking-tight text-white mt-2">
               ₹{totalAmount.toFixed(2)}
             </div>
             <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-1">
@@ -108,7 +108,7 @@ export const DashboardView = ({
         </div>
 
         {/* Card 2: This month (Image 2) */}
-        <div className="bg-white rounded-xl p-5 shadow-2xs border border-slate-200/90 flex flex-col justify-between min-h-[125px]">
+        <div className="kwf-stat bg-white rounded-xl p-5 shadow-2xs border border-slate-200/90 flex flex-col justify-between min-h-[125px]">
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span>This month</span>
             <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
@@ -116,7 +116,7 @@ export const DashboardView = ({
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-slate-900 mt-2">
+            <div className="font-heading tabular-nums text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mt-2">
               ₹{thisMonthAmount.toFixed(2)}
             </div>
             <div className="text-[11px] text-slate-400 mt-1">
@@ -126,7 +126,7 @@ export const DashboardView = ({
         </div>
 
         {/* Card 3: Unique donors (Image 2) */}
-        <div className="bg-white rounded-xl p-5 shadow-2xs border border-slate-200/90 flex flex-col justify-between min-h-[125px]">
+        <div className="kwf-stat bg-white rounded-xl p-5 shadow-2xs border border-slate-200/90 flex flex-col justify-between min-h-[125px]">
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Unique donors</span>
             <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
@@ -134,7 +134,7 @@ export const DashboardView = ({
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-slate-900 mt-2">
+            <div className="font-heading tabular-nums text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mt-2">
               {uniqueDonorsCount}
             </div>
             <div className="text-[11px] text-slate-400 mt-1">
@@ -144,7 +144,7 @@ export const DashboardView = ({
         </div>
 
         {/* Card 4: Needs attention (Image 2) */}
-        <div className="bg-white rounded-xl p-5 shadow-2xs border border-slate-200/90 flex flex-col justify-between min-h-[125px]">
+        <div className="kwf-stat bg-white rounded-xl p-5 shadow-2xs border border-slate-200/90 flex flex-col justify-between min-h-[125px]">
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Needs attention</span>
             <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
@@ -152,7 +152,7 @@ export const DashboardView = ({
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-slate-900 mt-2">
+            <div className="font-heading tabular-nums text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mt-2">
               0
             </div>
             <div className="text-[11px] text-slate-400 mt-1">
@@ -167,7 +167,7 @@ export const DashboardView = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Card: Contribution trends (Image 2) */}
-        <div className="lg:col-span-7 bg-white rounded-xl p-6 border border-slate-200/90 shadow-2xs space-y-4">
+        <div className="kwf-panel lg:col-span-7 bg-white rounded-xl p-6 border border-slate-200/90 shadow-2xs space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-slate-900">
@@ -230,7 +230,7 @@ export const DashboardView = ({
         </div>
 
         {/* Right Card: Receipt automation (Image 2) */}
-        <div className="lg:col-span-5 bg-white rounded-xl p-6 border border-slate-200/90 shadow-2xs space-y-4">
+        <div className="kwf-panel lg:col-span-5 bg-white rounded-xl p-6 border border-slate-200/90 shadow-2xs space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-slate-900">
@@ -320,7 +320,7 @@ export const DashboardView = ({
       </div>
 
       {/* Bottom Card: Recent donations (Image 2) */}
-      <div className="bg-white rounded-xl border border-slate-200/90 overflow-hidden shadow-2xs">
+      <div className="kwf-panel bg-white rounded-xl border border-slate-200/90 overflow-hidden shadow-2xs">
         
         {/* Table Header Row */}
         <div className="p-5 border-b border-slate-100 flex items-center justify-between">

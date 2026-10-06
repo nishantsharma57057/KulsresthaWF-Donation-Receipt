@@ -173,13 +173,13 @@ export const LoginView = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#eef2f6] flex items-center justify-center p-3 sm:p-6 lg:p-8 font-sans selection:bg-sky-500 selection:text-white">
+    <div className="kwf-login min-h-screen bg-[#eef2f6] flex items-center justify-center p-3 sm:p-6 lg:p-8 font-sans selection:bg-sky-500 selection:text-white">
       
       {/* Outer Card with Rounded Corners and Soft Shadow */}
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px] border border-slate-200/80">
+      <div className="kwf-login-card w-full max-w-5xl bg-white rounded-2xl shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px] border border-slate-200/80">
         
         {/* Left Column: Dark Navy Blue Panel */}
-        <div className="lg:col-span-5 bg-[#0e2a47] text-white p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden">
+        <div className="kwf-login-brand lg:col-span-5 bg-[#0e2a47] text-white p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Top: Logo Card */}

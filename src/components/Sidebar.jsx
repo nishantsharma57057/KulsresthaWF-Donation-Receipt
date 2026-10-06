@@ -42,7 +42,7 @@ export const Sidebar = ({
   };
 
   return (
-    <aside className="w-64 bg-[#0e263e] text-white flex flex-col justify-between shrink-0 select-none min-h-screen border-r border-slate-800">
+    <aside className="kwf-sidebar w-64 bg-[#0e263e] text-white flex flex-col justify-between shrink-0 select-none min-h-screen border-r border-slate-800">
 
       {/* Top Section */}
       <div>
@@ -61,13 +61,14 @@ export const Sidebar = ({
         </div>
 
         {/* Navigation Items */}
-        <nav className="px-3 space-y-1 mt-1">
+        <nav aria-label="Workspace navigation" className="px-3 space-y-1 mt-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
+                aria-current={isActive ? 'page' : undefined}
                 onClick={() => onSelectTab(item.id)}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-semibold transition-all ${isActive
                     ? 'bg-[#163b5e] text-white shadow-2xs font-bold'
@@ -101,7 +102,7 @@ export const Sidebar = ({
       </div>
 
       {/* Bottom Section: Workspace note & User info */}
-      <div className="p-4 border-t border-slate-800/80 space-y-4">
+      <div className="kwf-sidebar-footer p-4 border-t border-slate-800/80 space-y-4">
 
         {/* Private workspace badge (Image 2) */}
         <div className="flex items-center gap-2.5 text-xs text-slate-300">

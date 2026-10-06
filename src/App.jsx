@@ -141,7 +141,7 @@ export default function App() {
     : 'NS';
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex text-slate-900 font-sans selection:bg-sky-500 selection:text-white">
+    <div className="kwf-workspace min-h-screen bg-[#f8fafc] flex flex-col md:flex-row text-slate-900 font-sans selection:bg-sky-500 selection:text-white">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-5 right-5 z-50 animate-in fade-in slide-in-from-bottom-5 duration-200">
@@ -170,7 +170,7 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         
         {/* Top Breadcrumb & User Bar (Image 2 & 3) */}
-        <header className="h-16 bg-white border-b border-slate-200/90 px-6 sm:px-8 flex items-center justify-between shrink-0 sticky top-0 z-20">
+        <header className="kwf-topbar h-16 bg-white border-b border-slate-200/90 px-6 sm:px-8 flex items-center justify-between shrink-0 sticky top-0 z-20">
           {/* Left: Breadcrumbs (Image 2 & 3) */}
           <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
             <span>Workspace</span>
@@ -201,7 +201,7 @@ export default function App() {
         </header>
 
         {/* View Content Body */}
-        <main className="flex-1 p-6 sm:p-8 max-w-7xl w-full mx-auto">
+        <main className="kwf-main flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto">
           {activeTab === 'dashboard' && (
             <DashboardView
               donations={donations}

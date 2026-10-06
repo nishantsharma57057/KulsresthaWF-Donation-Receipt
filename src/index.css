@@ -1,13 +1,240 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: "Montserrat", "Poppins", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
 @layer base {
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-  
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.025em;
+  }
+
+  input, select, textarea, button {
+    font-family: inherit;
+  }
+
   code, pre, .font-mono {
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-feature-settings: "tnum" 1;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  button:not(:disabled), [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  button:focus-visible, a:focus-visible {
+    outline: 3px solid #38bdf8;
+    outline-offset: 3px;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+@layer components {
+  .kwf-workspace {
+    background: radial-gradient(ellipse at top right, #eaf5fc 0%, transparent 48%), #f5f7fb;
+  }
+
+  .kwf-topbar {
+    background: rgb(255 255 255 / 94%);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 1px 12px rgb(15 42 71 / 3%);
+    gap: 12px;
+  }
+
+  .kwf-main {
+    padding-top: 32px;
+  }
+
+  .kwf-sidebar {
+    background: linear-gradient(165deg, #102f4b 0%, #0b2036 100%);
+    box-shadow: 8px 0 32px rgb(15 42 71 / 5%);
+  }
+
+  .kwf-sidebar nav button {
+    min-height: 44px;
+    border: 1px solid transparent;
+  }
+
+  .kwf-sidebar nav button[aria-current="page"] {
+    background: linear-gradient(110deg, #194769, #163b5e);
+    border-color: rgb(125 211 252 / 18%);
+    box-shadow: inset 3px 0 #38bdf8, 0 4px 12px rgb(0 0 0 / 10%);
+  }
+
+  .kwf-stat, .kwf-panel {
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgb(15 42 71 / 4%);
+  }
+
+  .kwf-stat {
+    min-height: 150px;
+    padding: 24px;
+    transition: box-shadow 180ms ease, border-color 180ms ease;
+  }
+
+  .kwf-stat:hover {
+    box-shadow: 0 8px 28px rgb(15 42 71 / 8%);
+  }
+
+  .kwf-stat-primary {
+    background: radial-gradient(ellipse at top right, #185274, transparent 75%), #0e2a47;
+    border-color: #174666;
+  }
+
+  .kwf-stat-primary .text-slate-400 {
+    color: #b6cddd;
+  }
+
+  .kwf-workspace main table thead {
+    background: #f5f8fc;
+    color: #52657b;
+  }
+
+  .kwf-workspace main table th {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    white-space: nowrap;
+  }
+
+  .kwf-workspace main table td {
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+
+  .kwf-login {
+    background: radial-gradient(ellipse at 15% 15%, #dceef8, transparent 50%),
+      radial-gradient(ellipse at 90% 90%, #e1e8f5, transparent 45%), #f3f6fa;
+  }
+
+  .kwf-login-card {
+    border-radius: 24px;
+    box-shadow: 0 24px 72px rgb(15 42 71 / 12%), 0 4px 16px rgb(15 42 71 / 4%);
+  }
+
+  .kwf-login-brand {
+    background: radial-gradient(ellipse at top right, #164766, transparent 65%),
+      linear-gradient(160deg, #102f4b, #0b2036);
+  }
+
+  .kwf-login input:not([type="checkbox"]):not([type="radio"]),
+  .kwf-workspace input:not([type="checkbox"]):not([type="radio"]),
+  .kwf-workspace select, .kwf-workspace textarea {
+    border-radius: 10px;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+
+  .kwf-login input:not([type="checkbox"]):not([type="radio"]) {
+    min-height: 46px;
+  }
+
+  .kwf-login input:focus, .kwf-workspace input:focus,
+  .kwf-workspace select:focus, .kwf-workspace textarea:focus {
+    outline: none;
+    border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgb(14 165 233 / 15%);
+  }
+
+  .kwf-login button[type="submit"] {
+    min-height: 48px;
+    border-radius: 10px;
+    box-shadow: 0 6px 16px rgb(2 132 199 / 18%);
+  }
+}
+
+@media (min-width: 768px) {
+  .kwf-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .kwf-sidebar {
+    width: 100%;
+    min-height: auto;
+  }
+
+  .kwf-sidebar > div:first-child > div:first-child {
+    padding: 12px 16px;
+  }
+
+  .kwf-sidebar > div:first-child > div:nth-child(2) {
+    display: none;
+  }
+
+  .kwf-sidebar nav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 10px 12px;
+    margin-top: 0;
+  }
+
+  .kwf-sidebar nav button {
+    width: auto;
+    flex-shrink: 0;
+    margin-top: 0;
+    white-space: nowrap;
+    gap: 8px;
+  }
+
+  .kwf-sidebar > div:first-child > div:last-child {
+    margin: 0;
+    padding: 0 12px 12px;
+  }
+
+  .kwf-sidebar-footer {
+    padding: 12px 16px;
+  }
+
+  .kwf-sidebar-footer > div:first-child {
+    display: none;
+  }
+
+  .kwf-sidebar-footer > div:last-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .kwf-topbar {
+    padding-inline: 16px;
+  }
+
+  .kwf-topbar > div:last-child {
+    gap: 10px;
+  }
+
+  .kwf-main {
+    padding-top: 24px;
+  }
+
+  .kwf-dashboard > div:nth-child(2),
+  .kwf-dashboard > div:last-child {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
