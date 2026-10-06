@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StorageService } from '../services/storage';
 import {
   Clock,
@@ -41,10 +41,20 @@ export const UserAccessView = ({ currentUser }) => {
     setTimeout(() => setToastMsg(null), 3500);
   };
 
-  const handleApprove = (id, name) => {
-    StorageService.approveUser(id);
-    refreshList();
-    showToast(`Approved access for ${name}`);
+  useEffect(() => {
+    let active = true;
+    StorageService.refreshRegisteredUsers().then(list => {
+      if (active) setUsers(list);
+    }).catch(() => { if (active) showToast('Could not load latest account requests. Please refresh.'); });
+    return () => { active = false; };
+  }, []);
+
+  const handleApprove = async (id, name) => {
+    try {
+      await StorageService.approveUser(id);
+      refreshList();
+      showToast(`Approved access for ${name}`);
+    } catch { showToast('Approval could not be saved. Please try again.'); }
   };
 
   const handleDelete = (id, name) => {
@@ -129,6 +139,10 @@ export const UserAccessView = ({ currentUser }) => {
       .join('')
       .toUpperCase();
   };
+
+  if (currentUser?.role !== 'admin' || !['approved', 'main_admin'].includes(currentUser?.status)) {
+    return <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600">Only an approved administrator can manage user access.</div>;
+  }
 
   return (
     <div className="space-y-6 pb-12">

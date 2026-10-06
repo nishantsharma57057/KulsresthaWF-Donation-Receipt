@@ -643,8 +643,16 @@ export const StorageService = {
       if (!stored) {
         return null;
       }
-      return JSON.parse(stored);
+      const session = JSON.parse(stored);
+      const account = this.getRegisteredUsers().find(u => u.id === session?.id);
+      if (!account || !['approved', 'main_admin'].includes(account.status)) {
+        localStorage.removeItem(AUTH_KEY);
+        return null;
+      }
+      const { id, name, username, email, role, status } = account;
+      return { id, name, username, email, role, status };
     } catch {
+      localStorage.removeItem(AUTH_KEY);
       return null;
     }
   },
@@ -653,8 +661,24 @@ export const StorageService = {
     if (!user) {
       localStorage.removeItem(AUTH_KEY);
     } else {
-      localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+      const account = this.getRegisteredUsers().find(u => u.id === user.id);
+      if (!account || !['approved', 'main_admin'].includes(account.status)) {
+        localStorage.removeItem(AUTH_KEY);
+        return false;
+      }
+      const { id, name, username, email, role, status } = account;
+      localStorage.setItem(AUTH_KEY, JSON.stringify({ id, name, username, email, role, status }));
+      return true;
     }
+  },
+
+  async refreshRegisteredUsers() {
+    const remote = await FirestoreService.getUsers();
+    const merged = new Map(this.getRegisteredUsers().map(user => [user.id, user]));
+    remote.forEach(user => merged.set(user.id, user));
+    const users = [...merged.values()];
+    localStorage.setItem('kwf_registered_users_v3', JSON.stringify(users));
+    return users;
   },
 
   getRegisteredUsers() {
@@ -703,7 +727,7 @@ export const StorageService = {
     }
   },
 
-  registerUser(name, email, password, username, role = 'staff') {
+  async registerUser(name, email, password, username, role = 'staff') {
     const cleanEmail = email.trim().toLowerCase();
     const cleanName = name.trim();
     const cleanUsername = (username || cleanEmail.split('@')[0]).trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
@@ -712,7 +736,7 @@ export const StorageService = {
       return { success: false, error: 'All fields are required.' };
     }
 
-    const users = this.getRegisteredUsers();
+    const users = await this.refreshRegisteredUsers();
     const exists = users.find(
       (u) => u.email.toLowerCase() === cleanEmail || (u.username && u.username.toLowerCase() === cleanUsername)
     );
@@ -725,17 +749,15 @@ export const StorageService = {
       name: cleanName,
       username: cleanUsername,
       email: cleanEmail,
-      role,
+      role: 'staff',
       status: 'pending',
       passwordHash: password,
       createdAt: new Date().toISOString()
     };
 
+    await FirestoreService.saveUser(newUser);
     const updated = [...users, newUser];
     localStorage.setItem('kwf_registered_users_v3', JSON.stringify(updated));
-
-    // Save to Firestore
-    FirestoreService.saveUser(newUser).catch(console.warn);
 
     const userToReturn = {
       id: newUser.id,
@@ -749,9 +771,9 @@ export const StorageService = {
     return { success: true, user: userToReturn };
   },
 
-  authenticateUser(identifier, password) {
+  async authenticateUser(identifier, password) {
     const cleanId = identifier.trim().toLowerCase();
-    const users = this.getRegisteredUsers();
+    const users = await this.refreshRegisteredUsers();
     const match = users.find(
       (u) =>
         (u.email.toLowerCase() === cleanId || (u.username && u.username.toLowerCase() === cleanId)) &&
@@ -760,6 +782,13 @@ export const StorageService = {
 
     if (!match) {
       return { success: false, error: 'Invalid username/email or password.' };
+    }
+
+    if (!['approved', 'main_admin'].includes(match.status)) {
+      this.setCurrentUser(null);
+      return { success: false, error: match.status === 'pending'
+        ? 'Your account is pending administrator approval. You can sign in once approved.'
+        : 'Your account does not have access. Please contact your administrator.' };
     }
 
     const user = {
@@ -771,23 +800,28 @@ export const StorageService = {
       status: match.status
     };
 
-    this.setCurrentUser(user);
     return { success: true, user };
   },
 
-  approveUser(userId) {
-    const users = this.getRegisteredUsers();
-    const updated = users.map((u) => (u.id === userId ? { ...u, status: 'approved' } : u));
-    localStorage.setItem('kwf_registered_users_v3', JSON.stringify(updated));
-
-    const approvedUser = updated.find((u) => u.id === userId);
-    if (approvedUser) {
-      FirestoreService.saveUser(approvedUser).catch(console.warn);
+  async approveUser(userId) {
+    const actor = this.getCurrentUser();
+    if (!actor || actor.role !== 'admin' || !['approved', 'main_admin'].includes(actor.status)) {
+      throw new Error('Only an approved administrator can manage account access.');
     }
+    const users = await this.refreshRegisteredUsers();
+    const updated = users.map((u) => (u.id === userId ? { ...u, status: 'approved' } : u));
+    const approvedUser = updated.find((u) => u.id === userId);
+    if (!approvedUser) throw new Error('User not found.');
+    await FirestoreService.saveUser(approvedUser);
+    localStorage.setItem('kwf_registered_users_v3', JSON.stringify(updated));
     return true;
   },
 
   updateRegisteredUser(userId, updates) {
+    const actor = this.getCurrentUser();
+    if (!actor || actor.role !== 'admin' || !['approved', 'main_admin'].includes(actor.status)) {
+      throw new Error('Only an approved administrator can manage account access.');
+    }
     const users = this.getRegisteredUsers();
     const idx = users.findIndex((u) => u.id === userId);
     if (idx === -1) return { success: false, error: 'User not found' };
@@ -821,6 +855,10 @@ export const StorageService = {
   },
 
   deleteRegisteredUser(userId) {
+    const actor = this.getCurrentUser();
+    if (!actor || actor.role !== 'admin' || !['approved', 'main_admin'].includes(actor.status)) {
+      throw new Error('Only an approved administrator can manage account access.');
+    }
     const users = this.getRegisteredUsers();
     const filtered = users.filter((u) => u.id !== userId);
     if (filtered.length === users.length) return false;

@@ -20,6 +20,7 @@ export default function App() {
   const [donations, setDonations] = useState(() => StorageService.getDonations());
   const [settings, setSettings] = useState(() => StorageService.getNgoSettings());
   const [currentUser, setCurrentUser] = useState(() => StorageService.getCurrentUser());
+  const [checkingAccess, setCheckingAccess] = useState(() => !!StorageService.getCurrentUser());
   const [isCloudConnected, setIsCloudConnected] = useState(true);
 
   // Navigation tab matching Image 2 & 3: 'dashboard' | 'donations' | 'reports' | 'settings' | 'users'
@@ -33,6 +34,17 @@ export default function App() {
 
   const [isSyncing, setIsSyncing] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+
+  useEffect(() => {
+    if (!currentUser?.id) { setCheckingAccess(false); return; }
+    let active = true;
+    StorageService.refreshRegisteredUsers().then(() => {
+      if (active) setCurrentUser(StorageService.getCurrentUser());
+    }).catch(() => {
+      if (active) { StorageService.setCurrentUser(null); setCurrentUser(null); }
+    }).finally(() => { if (active) setCheckingAccess(false); });
+    return () => { active = false; };
+  }, [currentUser?.id]);
 
   // Real-time Firestore subscription on boot
   useEffect(() => {
@@ -95,12 +107,17 @@ export default function App() {
     showToast(`Receipt ${newDonation.receiptNo} created successfully!`);
   };
 
+  if (checkingAccess) {
+    return <div className="kwf-login flex min-h-screen items-center justify-center text-sm text-slate-500" role="status">Checking your account access…</div>;
+  }
+
   // If not logged in, render exact Image 1 split-screen Login/Register view
   if (!currentUser) {
     return (
       <LoginView
         onLoginSuccess={(user) => {
-          setCurrentUser(user);
+          if (!StorageService.setCurrentUser(user)) return;
+          setCurrentUser(StorageService.getCurrentUser());
           showToast(`Welcome back, ${user.name}`);
         }}
       />

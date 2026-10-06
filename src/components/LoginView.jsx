@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 
 export const LoginView = ({ onLoginSuccess }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [tab, setTab] = useState('login'); // default to real login
   const [loginStep, setLoginStep] = useState('credentials');
 
@@ -56,7 +57,7 @@ export const LoginView = ({ onLoginSuccess }) => {
     return () => clearInterval(interval);
   }, [loginStep, otpResendTimer]);
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccessMsg(null);
@@ -82,7 +83,11 @@ export const LoginView = ({ onLoginSuccess }) => {
       return;
     }
 
-    const res = StorageService.registerUser(fullName, email, password, username, 'staff');
+    setIsSubmitting(true);
+    let res;
+    try { res = await StorageService.registerUser(fullName, email, password, username, 'staff'); }
+    catch { setError('Could not submit your registration. Please check your connection and try again.'); return; }
+    finally { setIsSubmitting(false); }
     if (!res.success || !res.user) {
       setError(res.error || 'Failed to create user account.');
       return;
@@ -128,18 +133,22 @@ export const LoginView = ({ onLoginSuccess }) => {
     return `${maskedName}@${parts[1]}`;
   };
 
-  const handleCredentialsSubmit = (e) => {
+  const handleCredentialsSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    const res = StorageService.authenticateUser(loginIdentifier, loginPassword);
+    setIsSubmitting(true);
+    let res;
+    try { res = await StorageService.authenticateUser(loginIdentifier, loginPassword); }
+    catch { setError('Could not verify account approval. Please check your connection and try again.'); return; }
+    finally { setIsSubmitting(false); }
     if (!res.success || !res.user) {
       setError(res.error || 'Invalid username/email or password.');
       return;
     }
 
     // Check if user is approved
-    if (res.user.status === 'pending') {
+    if (!['approved', 'main_admin'].includes(res.user.status)) {
       setError('Your account is currently pending administrator approval. Please contact your manager.');
       return;
     }
@@ -155,7 +164,7 @@ export const LoginView = ({ onLoginSuccess }) => {
     }
   };
 
-  const handleOtpVerify = (e) => {
+  const handleOtpVerify = async (e) => {
     e.preventDefault();
     setError(null);
 
@@ -165,7 +174,17 @@ export const LoginView = ({ onLoginSuccess }) => {
     }
 
     if (pendingUser) {
-      onLoginSuccess(pendingUser);
+      setIsSubmitting(true);
+      try {
+        const res = await StorageService.authenticateUser(loginIdentifier, loginPassword);
+        if (!res.success || res.user?.id !== pendingUser.id) {
+          setError(res.error || 'Your account no longer has access. Please contact your administrator.');
+          return;
+        }
+        onLoginSuccess(res.user);
+      } catch {
+        setError('Could not verify account approval. Please try again.');
+      } finally { setIsSubmitting(false); }
     }
   };
 
@@ -343,6 +362,7 @@ export const LoginView = ({ onLoginSuccess }) => {
 
                   <button
                     type="submit"
+                    disabled={isSubmitting || isSendingOtp}
                     className="w-full py-3 px-4 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-lg text-sm font-semibold shadow-sm transition-all flex items-center justify-center gap-2"
                   >
                     <ShieldCheck className="w-4 h-4" />
@@ -483,6 +503,7 @@ export const LoginView = ({ onLoginSuccess }) => {
 
                 <button
                   type="submit"
+                    disabled={isSubmitting || isSendingOtp}
                   className="w-full mt-2 py-3 px-4 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-lg text-sm font-semibold shadow-sm transition-all flex items-center justify-center gap-2"
                 >
                   <Lock className="w-4 h-4" />
@@ -551,6 +572,7 @@ export const LoginView = ({ onLoginSuccess }) => {
 
                   <button
                     type="submit"
+                    disabled={isSubmitting || isSendingOtp}
                     className="w-full mt-2 py-3 px-4 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-lg text-sm font-semibold shadow-sm transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
                   >
                     <Lock className="w-4 h-4" />
