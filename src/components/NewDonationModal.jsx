@@ -1,5 +1,5 @@
 import { getReceiptShareUrl } from '../utils/receiptShare';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StorageService } from '../services/storage';
 import { numberToIndianWords, formatIndianCurrency } from '../utils/numberToWords';
 import { downloadDonationPdf, printDonationReceipt } from '../utils/receiptGenerator';
@@ -40,13 +40,62 @@ const PAYMENT_MODES = [
   'Cash'
 ];
 
-export const NewDonationModal = ({
-  isOpen,
+export const NewDonationModal = (props) => {
+  const [formSession, setFormSession] = useState(0);
+  return props.isOpen ? <DonationForm key={formSession} {...props} onStartNext={() => setFormSession((session) => session + 1)} /> : null;
+};
+
+const getDonationTimestamp = () => {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+  }).formatToParts(new Date());
+  const value = (type) => parts.find((part) => part.type === type).value;
+  return { date: `${value('year')}-${value('month')}-${value('day')}`, time: `${value('hour')}:${value('minute')}` };
+};
+
+const DonationForm = ({
+  onStartNext,
   onClose,
   onSuccess,
   settings
 }) => {
   const nextReceiptNo = StorageService.getNextReceiptNo();
+  const [initialTimestamp] = useState(getDonationTimestamp);
+  const dialogRef = useRef(null);
+  const submitRef = useRef(false);
+  const closeRef = useRef(onClose);
+  useEffect(() => { closeRef.current = onClose; }, [onClose]);
+  useEffect(() => {
+    const trigger = document.activeElement;
+    const oldOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const dialog = dialogRef.current;
+    const focusable = () => [...dialog.querySelectorAll('button, input, select, textarea, a[href], [tabindex]')]
+      .filter((element) => !element.disabled && element.tabIndex >= 0);
+    const firstInput = dialog.querySelector('input');
+    (firstInput || dialog).focus();
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') { event.preventDefault(); closeRef.current(); }
+      if (event.key === 'Tab') {
+        const elements = focusable();
+        const first = elements[0];
+        const last = elements[elements.length - 1];
+        if (!first) { event.preventDefault(); dialog.focus(); return; }
+        if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+          event.preventDefault(); last.focus();
+        } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+          event.preventDefault(); first.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = oldOverflow;
+      if (trigger?.isConnected) trigger.focus();
+    };
+  }, []);
 
   const [donorName, setDonorName] = useState('');
   const [donorPhone, setDonorPhone] = useState('');
@@ -61,21 +110,20 @@ export const NewDonationModal = ({
   const [cause, setCause] = useState('Child Education');
   const [paymentMode, setPaymentMode] = useState('UPI');
   const [transactionId, setTransactionId] = useState('');
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [time, setTime] = useState(() => {
-    const d = new Date();
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  });
+  const [date, setDate] = useState(initialTimestamp.date);
+  const [time, setTime] = useState(initialTimestamp.time);
   const [is80GEligible, setIs80GEligible] = useState(true);
-  const [autoEmailReceipt, setAutoEmailReceipt] = useState(true);
   const [autoDownloadPdf, setAutoDownloadPdf] = useState(true);
   const [autoOpenWhatsApp, setAutoOpenWhatsApp] = useState(true);
   const [notes, setNotes] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedDonation, setSubmittedDonation] = useState(null);
+  useEffect(() => {
+    if (submittedDonation) dialogRef.current?.querySelector('#new-donation-title')?.focus();
+  }, [submittedDonation?.id]);
 
-  if (!isOpen) return null;
+  const [formError, setFormError] = useState(null);
 
   const handleAmountChange = (val) => {
     setAmount(val);
@@ -93,15 +141,19 @@ export const NewDonationModal = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (submitRef.current) return;
+    setFormError(null);
     if (!donorName.trim()) {
-      alert('Please enter Donor Name');
+      setFormError('Please enter the donor name.');
       return;
     }
-    if (!amount || amount <= 0) {
-      alert('Please enter a valid donation amount');
+    if (!Number.isFinite(Number(amount)) || Number(amount) <= 0) {
+      setFormError('Please enter a valid donation amount greater than zero.');
       return;
     }
 
+    if (!isPanValid) { setFormError('Enter a valid PAN or leave the optional PAN field empty.'); return; }
+    submitRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -162,23 +214,14 @@ export const NewDonationModal = ({
       setSubmittedDonation(generated);
       onSuccess(generated);
     } catch (err) {
-      alert('Failed to save donation: ' + err.message);
+      submitRef.current = false;
+      setFormError('Could not save the donation: ' + err.message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleResetForNext = () => {
-    setSubmittedDonation(null);
-    setDonorName('');
-    setDonorPhone('');
-    setDonorEmail('');
-    setDonorPan('');
-    setDonorAddress('');
-    setAmount(5100);
-    setTransactionId('');
-    setNotes('');
-  };
+  const handleResetForNext = onStartNext;
 
   const openWhatsAppDirect = (d) => {
     let cleanPhone = d.donorPhone.replace(/[^0-9]/g, '');
@@ -222,7 +265,7 @@ export const NewDonationModal = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-      <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="new-donation-title" tabIndex={-1} className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[calc(100dvh-2rem)] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-sky-50 to-white border-b border-slate-200">
@@ -231,17 +274,19 @@ export const NewDonationModal = ({
               <Heart className="w-5 h-5 fill-sky-600/20" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 leading-tight">
+              <h2 id="new-donation-title" tabIndex={-1} className="text-lg font-bold text-slate-900 leading-tight">
                 {submittedDonation ? 'Donation Recorded Successfully' : 'Record New Donation'}
               </h2>
               <p className="text-xs text-slate-500">
                 {submittedDonation
-                  ? `Receipt #${submittedDonation.receiptNo} generated & synced`
-                  : `Next Receipt Number: ${nextReceiptNo} · Section 80G Compliant`}
+                  ? `Receipt #${submittedDonation.receiptNo} created`
+                  : `Next Receipt Number: ${nextReceiptNo}`}
               </p>
             </div>
           </div>
           <button
+            type="button"
+            aria-label="Close new donation"
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
           >
@@ -258,11 +303,11 @@ export const NewDonationModal = ({
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-bold text-slate-900">
-                Receipt {submittedDonation.receiptNo} Generated & Auto-Triggered!
+                Receipt {submittedDonation.receiptNo} Created
               </h3>
               <p className="text-xs text-slate-600 max-w-md mx-auto">
                 Donation of <span className="font-semibold text-slate-900">{formatIndianCurrency(submittedDonation.amount)}</span> from{' '}
-                <span className="font-semibold text-slate-900">{submittedDonation.donorName}</span> has been processed. All delivery actions have fired automatically.
+                <span className="font-semibold text-slate-900">{submittedDonation.donorName}</span> has been recorded. Review the receipt actions below.
               </p>
             </div>
 
@@ -271,10 +316,10 @@ export const NewDonationModal = ({
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  All 4 Automated Actions Executed on Submit:
+                  Receipt actions
                 </span>
                 <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full font-mono">
-                  AUTO-TRIGGERED
+                  FOLLOW-UP
                 </span>
               </div>
 
@@ -284,7 +329,7 @@ export const NewDonationModal = ({
                   <Download className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold text-slate-900 block leading-tight">1. PDF Receipt</span>
-                    <span className="text-[11px] text-emerald-700">Auto-downloaded to your device</span>
+                    <span className="text-[11px] text-emerald-700">{autoDownloadPdf ? 'Automatic download requested' : 'Automatic download is off'}</span>
                   </div>
                 </div>
 
@@ -294,7 +339,7 @@ export const NewDonationModal = ({
                   <div>
                     <span className="font-bold text-slate-900 block leading-tight">2. WhatsApp Message</span>
                     <span className="text-[11px] text-emerald-700">
-                      Auto-opened for {submittedDonation.donorPhone}
+                      {!submittedDonation.donorPhone ? 'No phone provided' : autoOpenWhatsApp ? 'WhatsApp draft requested; sending is manual' : 'Automatic WhatsApp opening is off'}
                     </span>
                   </div>
                 </div>
@@ -342,7 +387,7 @@ export const NewDonationModal = ({
                 </div>
                 <div>
                   <span className="block text-slate-400 text-[11px]">80G Exemption</span>
-                  <span className="font-semibold text-emerald-700">Eligible (50% Tax Deduction)</span>
+                  <span className="font-semibold text-emerald-700">{submittedDonation.is80GEligible ? 'Marked eligible' : 'Not marked eligible'}</span>
                 </div>
               </div>
             </div>
@@ -373,7 +418,7 @@ export const NewDonationModal = ({
                 className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold shadow-sm transition-all"
               >
                 <Mail className="w-4 h-4" />
-                <span>Resend / View Email</span>
+                <span>Open Email Draft</span>
               </button>
             </div>
 
@@ -407,7 +452,8 @@ export const NewDonationModal = ({
           </div>
         ) : (
           /* FORM BODY */
-          <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[78vh] overflow-y-auto">
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            {formError && <div role="alert" className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{formError}</div>}
             {/* Amount Selection */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -503,7 +549,7 @@ export const NewDonationModal = ({
                     type="email"
                     value={donorEmail}
                     onChange={(e) => setDonorEmail(e.target.value)}
-                    placeholder="donor@example.com (Receipt PDF will be emailed)"
+                    placeholder="donor@example.com (optional)"
                     className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                   />
                   <p className="text-[11px] text-slate-500 mt-1">
@@ -712,15 +758,10 @@ export const NewDonationModal = ({
                     <span>💬 Auto-Trigger WhatsApp Message</span>
                   </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer font-medium">
-                    <input
-                      type="checkbox"
-                      checked={autoEmailReceipt}
-                      onChange={(e) => setAutoEmailReceipt(e.target.checked)}
-                      className="rounded text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span>✉️ Auto-Dispatch Email with 80G PDF</span>
-                  </label>
+                  <div className="flex items-center gap-2 font-medium">
+                    <Mail className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Email draft is available after saving</span>
+                  </div>
 
                   <div className="flex items-center gap-2 font-medium text-emerald-800">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -747,11 +788,11 @@ export const NewDonationModal = ({
                   className="inline-flex items-center gap-2 px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-bold shadow-sm transition-all focus:ring-2 focus:ring-sky-500 disabled:opacity-50 active:scale-[0.99]"
                 >
                   {isSubmitting ? (
-                    <span>Auto-Triggering All Actions...</span>
+                    <span>Saving donation...</span>
                   ) : (
                     <>
                       <Zap className="w-4 h-4 fill-white" />
-                      <span>Save & Auto-Trigger Receipt</span>
+                      <span>Save Donation & Create Receipt</span>
                       <span className="font-mono text-xs opacity-80">({nextReceiptNo})</span>
                     </>
                   )}
