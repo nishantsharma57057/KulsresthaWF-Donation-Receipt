@@ -116,11 +116,11 @@ export const Sidebar = ({
         <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-800 flex items-center justify-center font-bold text-xs font-mono shadow-sm">
-              {currentUser ? getInitials(currentUser.name) : 'NS'}
+              {currentUser ? getInitials(currentUser.name) : 'U'}
             </div>
             <div className="leading-tight">
               <span className="font-bold text-xs text-white block">
-                {currentUser?.status === 'main_admin' ? 'User' : currentUser?.name || 'Main admin'}
+                {currentUser?.name || 'User'}
               </span>
               <span className="text-[11px] text-slate-400 font-mono">
                 {currentUser?.username || ''}
