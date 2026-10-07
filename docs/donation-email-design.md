@@ -9,3 +9,5 @@ The web app sends plain text, HTML and embedded logo/signature images. Gmail use
 5. In the app, open a donation → Send email. Review the design preview and send a test to your own address.
 
 No test email was sent automatically. The preview uses the same HTML as the webhook payload. Email clients may use Arial when Montserrat/Poppins are unavailable. Opening an external mail client uses the plain-text version; attach the receipt PDF manually.
+
+For the organization email/WhatsApp sender and required account setup, see [sender-setup.md](sender-setup.md).

@@ -78,6 +78,7 @@ const WhatsAppComposer = ({
 
         {/* Body */}
         <div className="p-6 space-y-4 text-xs">
+          <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-900">Sender account: {settings.whatsappSenderNumber || '8826961430'}. Log in to this number in WhatsApp before sending; the portal cannot switch your logged-in account.</p>
           {/* Status info */}
           <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 text-slate-600">
             <div>

@@ -15,9 +15,9 @@ export const EmailWhatsAppSetup = ({
   settings,
   onUpdateSettings
 }) => {
-  const [senderEmail, setSenderEmail] = useState(settings?.senderEmail || 'nishantsharma57057@gmail.com');
+  const [senderEmail, setSenderEmail] = useState(settings?.senderEmail || 'info@kulshresthawf.org');
   const [senderName, setSenderName] = useState(settings?.senderName || 'Kulshrestha Welfare Foundation');
-  const [whatsappNumber, setWhatsappNumber] = useState(settings?.whatsappSenderNumber || '+91 98112 34567');
+  const [whatsappNumber, setWhatsappNumber] = useState(settings?.whatsappSenderNumber || '8826961430');
   const [whatsappTemplate, setWhatsappTemplate] = useState(settings?.whatsappTemplate || '');
   const [autoEmail, setAutoEmail] = useState(settings?.isAutoEmailReceipt ?? true);
 
@@ -30,6 +30,24 @@ export const EmailWhatsAppSetup = ({
 // This script sends receipt emails directly from your own Gmail
 // and appends donation rows to your Google Sheet!
 // -------------------------------------------------------------
+
+// Fixed organization sender; never silently fall back to a personal Gmail address.
+var KWF_SENDER_EMAIL = "info@kulshresthawf.org";
+
+function kwfSenderOptions(senderName) {
+  var options = { name: senderName, replyTo: KWF_SENDER_EMAIL };
+  var aliases = GmailApp.getAliases();
+  var matchingAlias = aliases.filter(function(address) {
+    return address.toLowerCase() === KWF_SENDER_EMAIL;
+  })[0];
+  if (matchingAlias) {
+    options.from = matchingAlias;
+    return options;
+  }
+  var accountEmail = Session.getEffectiveUser().getEmail().toLowerCase();
+  if (accountEmail === KWF_SENDER_EMAIL) return options;
+  throw new Error("Sender setup required: verify info@kulshresthawf.org in Gmail Settings > Accounts and Import > Send mail as, or deploy using that Google Workspace account.");
+}
 
 function doPost(e) {
   try {
@@ -55,9 +73,7 @@ function doPost(e) {
         "Delhi | www.kulshresthawf.org"
       );
 
-      GmailApp.sendEmail(contents.recipientEmail, otpSubject, otpBody, {
-        name: "Kulshrestha Welfare Security"
-      });
+      GmailApp.sendEmail(contents.recipientEmail, otpSubject, otpBody, kwfSenderOptions("Kulshrestha Welfare Security"));
 
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",
@@ -155,9 +171,7 @@ function doPost(e) {
         "Delhi | www.kulshresthawf.org"
       );
 
-      var mailOptions = {
-        name: "Kulshrestha Welfare Foundation"
-      };
+      var mailOptions = kwfSenderOptions("Kulshrestha Welfare Foundation");
 
       // Render the receipt-style HTML and embed the original logo/signature.
       if (contents.htmlBody) mailOptions.htmlBody = contents.htmlBody;
@@ -279,7 +293,7 @@ function doPost(e) {
                 className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500"
               />
               <span className="text-[10px] text-slate-400 mt-1 block">
-                Emails to donors will be sent using this email as the sender.
+                Sender must be a verified Gmail alias or the Apps Script account email. Deploy the updated script to apply it.
               </span>
             </div>
 
@@ -393,20 +407,20 @@ function doPost(e) {
                 type="text"
                 value={whatsappNumber}
                 onChange={(e) => setWhatsappNumber(e.target.value)}
-                placeholder="+91 98112 34567"
+                placeholder="+91 8826961430"
                 className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg font-mono focus:ring-2 focus:ring-emerald-500"
               />
               <span className="text-[10px] text-slate-400 mt-1 block">
-                Format: +91XXXXXXXXXX (Used for sending receipts)
+                Expected sender account: +91 8826961430. Log in to this WhatsApp account before sending.
               </span>
             </div>
 
             <div>
               <label className="block font-semibold text-slate-700 mb-1">
-                How WhatsApp Sending Works:
+                WhatsApp sender account:
               </label>
               <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                When a donation is saved, the portal automatically formats the official 80G message with the donor's name, amount, cause, and direct PDF download link, opening directly into WhatsApp Web or mobile app.
+                When a donation is saved, the portal automatically formats the official 80G message with the donor's name, amount, cause, and direct PDF download link, opening directly into WhatsApp Web or mobile app. The sending account is whichever account is logged in; this field cannot switch it.
               </p>
             </div>
           </div>

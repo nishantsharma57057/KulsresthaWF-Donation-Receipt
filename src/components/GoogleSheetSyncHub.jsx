@@ -87,6 +87,24 @@ export const GoogleSheetSyncHub = ({
 // Set "Execute as: Me" and "Who has access: Anyone" -> Copy Web App URL
 // -------------------------------------------------------------
 
+// Fixed organization sender; never silently fall back to a personal Gmail address.
+var KWF_SENDER_EMAIL = "info@kulshresthawf.org";
+
+function kwfSenderOptions(senderName) {
+  var options = { name: senderName, replyTo: KWF_SENDER_EMAIL };
+  var aliases = GmailApp.getAliases();
+  var matchingAlias = aliases.filter(function(address) {
+    return address.toLowerCase() === KWF_SENDER_EMAIL;
+  })[0];
+  if (matchingAlias) {
+    options.from = matchingAlias;
+    return options;
+  }
+  var accountEmail = Session.getEffectiveUser().getEmail().toLowerCase();
+  if (accountEmail === KWF_SENDER_EMAIL) return options;
+  throw new Error("Sender setup required: verify info@kulshresthawf.org in Gmail Settings > Accounts and Import > Send mail as, or deploy using that Google Workspace account.");
+}
+
 function doPost(e) {
   try {
     var contents = JSON.parse(e.postData.contents);
@@ -111,9 +129,7 @@ function doPost(e) {
         "Delhi | www.kulshresthawf.org"
       );
 
-      GmailApp.sendEmail(contents.recipientEmail, otpSubject, otpBody, {
-        name: "Kulshrestha Welfare Security"
-      });
+      GmailApp.sendEmail(contents.recipientEmail, otpSubject, otpBody, kwfSenderOptions("Kulshrestha Welfare Security"));
 
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",
@@ -223,9 +239,7 @@ function doPost(e) {
         "Delhi | www.kulshresthawf.org"
       );
 
-      var mailOptions = {
-        name: "Kulshrestha Welfare Foundation"
-      };
+      var mailOptions = kwfSenderOptions("Kulshrestha Welfare Foundation");
 
       // Render the receipt-style HTML and embed the original logo/signature.
       if (contents.htmlBody) mailOptions.htmlBody = contents.htmlBody;

@@ -3,7 +3,7 @@ import { numberToIndianWords } from '../utils/numberToWords';
 import { FirestoreService } from './firestoreService';
 import { buildDonationEmail } from '../utils/emailTemplate';
 import { generateDonationPdf } from '../utils/receiptGenerator';
-import { APP_CONFIG, NGO_PROFILE_REVISION, resolveNgoProfile } from '../config/appConfig';
+import { APP_CONFIG, NGO_PROFILE_REVISION, SENDER_PROFILE_REVISION, resolveNgoProfile } from '../config/appConfig';
 
 const DONATIONS_KEY = 'kwf_donations_records_v1';
 const SETTINGS_KEY = 'kwf_ngo_settings_v1';
@@ -20,11 +20,12 @@ export const DEFAULT_SETTINGS = {
   googleSheetsSheetName: 'Donations_2026_27',
   isGoogleSheetAutoSync: true,
   isAutoEmailReceipt: true,
-  senderEmail: 'nishantsharma57057@gmail.com',
+  senderEmail: APP_CONFIG.email.fromEmail,
+  senderProfileRevision: SENDER_PROFILE_REVISION,
   senderName: 'Kulshrestha Welfare Foundation',
   gmailAppScriptEnabled: true,
   customEmailWebhookUrl: '',
-  whatsappSenderNumber: '8826961430',
+  whatsappSenderNumber: APP_CONFIG.whatsApp.businessPhone,
   whatsappTemplate: `Dear {DONOR_NAME},
 
 Warm greetings from *Kulshrestha Welfare Foundation*! 🙏
@@ -209,6 +210,12 @@ export const StorageService = {
         parsed.googleSheetsWebhookUrl = fallbackUrl;
       }
             const merged = { ...base, ...parsed };
+      if (parsed.senderProfileRevision !== SENDER_PROFILE_REVISION) {
+        merged.senderEmail = APP_CONFIG.email.fromEmail;
+        merged.whatsappSenderNumber = APP_CONFIG.whatsApp.businessPhone;
+        merged.senderProfileRevision = SENDER_PROFILE_REVISION;
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(merged));
+      }
       if (merged.googleSheetsSpreadsheetId === '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms') merged.googleSheetsSpreadsheetId = '';
       if (parsed.ngoProfileRevision !== NGO_PROFILE_REVISION) {
         const migrated = resolveNgoProfile({ ...merged, ngoProfileRevision: parsed.ngoProfileRevision });

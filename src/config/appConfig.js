@@ -42,7 +42,7 @@ export const APP_CONFIG = {
     provider: 'apps_script', // 'apps_script' | 'resend' | 'sendgrid' | 'smtp'
     fromName: 'Kulshrestha Welfare Foundation',
     fromEmail: 'info@kulshresthawf.org',
-    replyTo: 'nishantsharma57057@gmail.com',
+    replyTo: 'info@kulshresthawf.org',
     // 2-Factor Authentication (OTP on email during login)
     enableLoginEmailOtp: true,
     otpExpirationMinutes: 10,
@@ -98,3 +98,5 @@ export function resolveNgoProfile(settings = {}) {
   if (settings.ngoProfileRevision === NGO_PROFILE_REVISION) return settings;
   return { ...settings, ...APP_CONFIG.ngoProfile, ngoProfileRevision: NGO_PROFILE_REVISION };
 }
+
+export const SENDER_PROFILE_REVISION = 'organization-senders-2026-10-07';
