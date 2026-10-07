@@ -1,3 +1,4 @@
+import { cleanupApprovedLocalTestDonations } from './utils/testDonationCleanup';
 import { filterDonationRecords } from './utils/donationRecords';
 import { SharedReceiptPage } from './components/SharedReceiptPage.jsx';
 import React, { useState, useEffect } from 'react';
@@ -28,6 +29,7 @@ function Workspace() {
   const [currentUser, setCurrentUser] = useState(() => StorageService.getCurrentUser());
   const [checkingAccess, setCheckingAccess] = useState(() => !!StorageService.getCurrentUser());
   const [isCloudConnected, setIsCloudConnected] = useState(true);
+  const [preparingDonations, setPreparingDonations] = useState(true);
 
   // Navigation tab matching Image 2 & 3: 'dashboard' | 'donations' | 'reports' | 'settings' | 'users'
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -59,7 +61,19 @@ function Workspace() {
       .then((ok) => setIsCloudConnected(ok))
       .catch(() => setIsCloudConnected(false));
 
-    const unsubscribe = FirestoreService.subscribeDonations((cloudDonations) => {
+    let active = true;
+    let unsubscribe;
+    setPreparingDonations(true);
+    (async () => {
+      try {
+        const result = await cleanupApprovedLocalTestDonations();
+        if (active && result.removedCount) setToastMessage(result.removedCount + ' approved test donations removed. Next receipt starts at 0101 when the ledger is empty.');
+      } catch (error) {
+        if (active) setToastMessage('Test cleanup failed: ' + error.message);
+      }
+      if (!active) return;
+      setDonations(StorageService.getDonations());
+      unsubscribe = FirestoreService.subscribeDonations((cloudDonations) => {
       const records = filterDonationRecords(cloudDonations);
       if (Array.isArray(cloudDonations) && cloudDonations.length > 0) {
         setDonations(records);
@@ -70,8 +84,9 @@ function Workspace() {
         setDonations(StorageService.getDonations());
       }
     });
-
-    return () => unsubscribe();
+      setPreparingDonations(false);
+    })();
+    return () => { active = false; unsubscribe?.(); };
   }, [currentUser?.id, checkingAccess]);
 
   const refreshDonations = () => {
@@ -123,11 +138,16 @@ function Workspace() {
       <LoginView
         onLoginSuccess={(user) => {
           if (!StorageService.setCurrentUser(user)) return;
+          setPreparingDonations(true);
           setCurrentUser(StorageService.getCurrentUser());
           showToast(`Welcome back, ${user.name}`);
         }}
       />
     );
+  }
+
+  if (preparingDonations) {
+    return <div className="kwf-login flex min-h-screen items-center justify-center text-sm text-slate-500" role="status">Preparing donation records…</div>;
   }
 
   // Breadcrumb label for the active tab (Image 2 & 3)

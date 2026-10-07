@@ -97,18 +97,14 @@ export const StorageService = {
 
   getNextReceiptNo() {
     const settings = this.getNgoSettings();
-    let list = this.getDonations();
-    try {
-      const cached = JSON.parse(localStorage.getItem(DONATIONS_KEY) || '[]');
-      if (Array.isArray(cached)) list = cached.filter(Boolean);
-    } catch { /* use the visible records */ }
+    const list = this.getDonations();
     const currentFY = settings.financialYear.replace('-', '');
     const prefix = settings.receiptPrefix || 'KWF';
     
     // Find highest sequence
     let maxSeq = 100;
     list.forEach((d) => {
-      const match = d.receiptNo.match(/(\d+)$/);
+      const match = String(d.receiptNo || '').match(/(\d+)$/);
       if (match) {
         const seq = parseInt(match[1], 10);
         if (seq > maxSeq) maxSeq = seq;
