@@ -23,6 +23,7 @@ function kwfSenderOptions(senderName) {
 }
 
 function doPost(e) {
+  var stage = "parse_request";
   try {
     var contents = JSON.parse(e.postData.contents);
 
@@ -45,6 +46,7 @@ function doPost(e) {
         "Delhi | www.kulshresthawf.org"
       );
 
+      stage = "send_otp";
       GmailApp.sendEmail(contents.recipientEmail, otpSubject, otpBody, kwfSenderOptions("Kulshrestha Welfare Security"));
 
       return ContentService.createTextOutput(JSON.stringify({
@@ -54,6 +56,7 @@ function doPost(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
+    stage = "sheet_sync";
     var sheetError = null;
     var sheetSynced = false;
     if (contents.donation && contents.syncToSheet !== false) {
@@ -159,8 +162,10 @@ function doPost(e) {
         "Delhi | www.kulshresthawf.org"
       );
 
+      stage = "check_sender";
       var mailOptions = kwfSenderOptions("Kulshrestha Welfare Foundation");
 
+      stage = "prepare_email_assets";
       // Render the receipt-style HTML and embed the original logo/signature.
       if (contents.htmlBody) mailOptions.htmlBody = contents.htmlBody;
       if (contents.inlineImages) {
@@ -179,14 +184,31 @@ function doPost(e) {
         mailOptions.attachments = [pdfBlob];
       }
 
+      stage = "send_receipt";
       GmailApp.sendEmail(recipientEmail, subject, body, mailOptions);
       emailSent = true;
     }
 
+    console.log("KWF receipt result: emailSent=" + emailSent + ", sheetSynced=" + sheetSynced + ", pdfAttached=" + (emailSent && !!contents.pdfBase64));
     return ContentService.createTextOutput(JSON.stringify({ status: sheetError ? (emailSent ? "partial_success" : "error") : "success", emailSent: emailSent, sheetSynced: sheetSynced, sheetError: sheetError, attached: emailSent && !!contents.pdfBase64 }))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
+    console.error("KWF webhook failed at " + stage + ": " + String(err.message || err));
     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+// Run this function from the editor while signed in as the intended sender.
+// This checks authorization/sender setup without sending any email.
+function kwfCheckEmailSetup() {
+  try {
+    kwfSenderOptions("Kulshrestha Welfare Foundation");
+    var remaining = MailApp.getRemainingDailyQuota();
+    console.log("KWF sender setup OK; remaining daily recipient quota: " + remaining);
+    if (remaining === 0) console.warn("Daily email recipient quota is exhausted.");
+    return { senderConfigured: true, remainingRecipientQuota: remaining };
+  } catch (err) {
+    console.error("KWF sender check failed: " + String(err.message || err));
+    throw err;
   }
 }
