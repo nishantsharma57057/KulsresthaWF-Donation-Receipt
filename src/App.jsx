@@ -276,6 +276,7 @@ function Workspace() {
       {/* Modals */}
       {/* 1. Exact Image 4 Receipt Modal */}
       <ReceiptViewModal
+        onDonationUpdated={refreshDonations}
         donation={selectedDonationForReceipt}
         onClose={() => setSelectedDonationForReceipt(null)}
         settings={settings}

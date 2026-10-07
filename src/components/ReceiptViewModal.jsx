@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { StorageService } from '../services/storage';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { generateDonationPdf, getDonationPdfFilename } from '../utils/receiptGenerator';
 import {
   X,
@@ -15,7 +16,8 @@ export const ReceiptViewModal = ({
   onClose,
   settings,
   onOpenWhatsApp,
-  onOpenEmail
+  onOpenEmail,
+  onDonationUpdated
 }) => {
   const generated = useMemo(() => {
     if (!donation) return null;
@@ -23,6 +25,8 @@ export const ReceiptViewModal = ({
     catch (error) { return { error: error.message || 'Unable to generate receipt.' }; }
   }, [donation, settings]);
   const [preview, setPreview] = useState(null);
+  const [emailRequest, setEmailRequest] = useState(null);
+  const emailRequestBusy = useRef(false);
 
   useEffect(() => {
     if (!generated?.doc) { setPreview(null); return; }
@@ -44,7 +48,36 @@ export const ReceiptViewModal = ({
     generated?.doc?.save(getDonationPdfFilename(donation));
   };
 
-  const emailStatusLabel = donation.emailStatus === 'sent' ? '• Sent' : '• Setup required';
+  const currentRequest = emailRequest?.donationId === donation.id ? emailRequest : null;
+  const isEmailSending = currentRequest?.status === 'sending';
+  const recipientEmail = donation.donorEmail?.trim() || '';
+  const mailinatorRecipient = /@(?:[a-z0-9-]+\.)*mailinator\.com$/i.test(recipientEmail);
+  const currentEmailStatus = currentRequest?.status || donation.emailStatus;
+  const emailStatusLabel = {
+    sent: '• Sent',
+    sending: '• Sending request…',
+    queued: '• Request submitted',
+    failed: '• Request failed'
+  }[currentEmailStatus] || (settings?.googleSheetsWebhookUrl?.trim() ? '• Not requested' : '• Setup required');
+
+  const handleRetryEmail = async () => {
+    if (!recipientEmail) { onOpenEmail(donation); return; }
+    if (emailRequestBusy.current) return;
+    emailRequestBusy.current = true;
+    const donationId = donation.id;
+    setEmailRequest({ donationId, status: 'sending' });
+    try {
+      // Resend only the email. Re-sending must not depend on Sheets sync.
+      const result = await StorageService.sendReceiptEmail(donationId, recipientEmail, undefined, undefined, false);
+      if (!result.success) throw new Error(result.message || 'Email request failed.');
+      setEmailRequest({ donationId, status: 'queued', message: 'Receipt email request submitted to ' + recipientEmail + '. Delivery is not confirmed by the webhook response.' });
+      onDonationUpdated?.();
+    } catch (error) {
+      setEmailRequest({ donationId, status: 'failed', message: error.message || 'Could not submit the receipt email request.' });
+    } finally {
+      emailRequestBusy.current = false;
+    }
+  };
   const waStatusLabel = donation.whatsappStatus === 'sent' ? '• Sent' : '• Setup required';
   const sheetStatusLabel = donation.googleSheetStatus === 'synced' ? '• Synced' : '• Setup required';
 
@@ -137,13 +170,23 @@ export const ReceiptViewModal = ({
                     </span>
                     <button
                       type="button"
-                      onClick={() => onOpenEmail(donation)}
+                      onClick={handleRetryEmail}
+                      disabled={isEmailSending}
                       className="inline-flex items-center gap-1 text-[11px] text-sky-700 hover:text-sky-900 font-semibold"
                     >
                       <RotateCw className="w-3 h-3" />
-                      <span>Retry</span>
+                      <span>{isEmailSending ? 'Sending…' : 'Resend'}</span>
                     </button>
                   </div>
+                </div>
+
+                <div className="space-y-2 px-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+                    <span className="break-all">{recipientEmail || 'No recipient email saved'}</span>
+                    <button type="button" disabled={isEmailSending} onClick={() => onOpenEmail(donation)} className="font-semibold text-sky-700 hover:underline">Change email / Preview</button>
+                  </div>
+                  {mailinatorRecipient && <p className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-[11px] leading-relaxed text-amber-900">Mailinator public inboxes may reject PDF emails or remove attachments. Use a private email address to test this receipt.</p>}
+                  {currentRequest?.message && <p role={currentRequest.status === 'failed' ? 'alert' : 'status'} className={currentRequest.status === 'failed' ? 'text-[11px] leading-relaxed text-rose-700' : 'text-[11px] leading-relaxed text-sky-700'}>{currentRequest.message}</p>}
                 </div>
 
                 {/* WhatsApp receipt */}
@@ -186,7 +229,7 @@ export const ReceiptViewModal = ({
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-start gap-2 text-xs text-slate-500">
                 <AlertCircle className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                 <p className="text-[11px] leading-relaxed">
-                  "Accepted" means the provider received the request. It does not confirm delivery to the donor.
+                  "Request submitted" means the app submitted the webhook request. Inbox delivery must be checked separately.
                 </p>
               </div>
             </div>

@@ -18,6 +18,8 @@ const EmailComposer = ({
   const [copied, setCopied] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [sentSuccess, setSentSuccess] = useState(false);
+  const [sendError, setSendError] = useState(null);
+  const mailinatorRecipient = /@(?:[a-z0-9-]+\.)*mailinator\.com$/i.test(email.trim());
 
   const [body, setBody] = useState(initial.message);
   const emailContent = useMemo(() => buildDonationEmail(donation, settings, body), [donation, settings, body]);
@@ -34,20 +36,20 @@ const EmailComposer = ({
       return;
     }
 
+    if (isSending) return;
+    setSendError(null);
     setIsSending(true);
 
     try {
-      const result = await StorageService.sendReceiptEmail(donation.id, email.trim(), subject, body);
+      const result = await StorageService.sendReceiptEmail(donation.id, email.trim(), subject, body, false);
       if (!result.success) throw new Error(result.message || 'Email request failed.');
       onSent(donation.id);
       setIsSending(false);
       setSentSuccess(true);
-      setTimeout(() => {
-        onClose();
-      }, 1500);
+
     } catch (error) {
       setIsSending(false);
-      alert(error.message || 'Failed to trigger email webhook.');
+      setSendError(error.message || 'Failed to trigger email webhook.');
     }
   };
 
@@ -86,6 +88,8 @@ const EmailComposer = ({
 
         {/* Content */}
         <div className="p-6 space-y-4 text-xs">
+          {sendError && <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-rose-700">{sendError}</p>}
+          {mailinatorRecipient && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900">Mailinator public inboxes may reject PDF emails or remove attachments. Use a private recipient address to test the receipt.</p>}
           {sentSuccess ? (
             <div className="p-8 text-center space-y-3">
               <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
@@ -113,7 +117,7 @@ const EmailComposer = ({
                       Sent on {donation.emailSentAt?.slice(0, 16).replace('T', ' ')}
                     </span>
                   ) : (
-                    <span className="text-amber-700 font-medium">Pending Delivery</span>
+                    <span className="text-amber-700 font-medium">{donation.emailStatus === 'queued' ? 'Request submitted' : donation.emailStatus === 'failed' ? 'Previous request failed' : 'Not requested'}</span>
                   )}
                 </div>
               </div>
