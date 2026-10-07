@@ -25,7 +25,6 @@ function kwfSenderOptions(senderName) {
 function doPost(e) {
   try {
     var contents = JSON.parse(e.postData.contents);
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
 
     // -----------------------------------------------------------
     // 1. LIVE LOGIN 2FA OTP DISPATCH VIA GMAIL
@@ -55,74 +54,89 @@ function doPost(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // Fallback if standalone script
-    if (!ss && contents.spreadsheetId) {
+    var sheetError = null;
+    var sheetSynced = false;
+    if (contents.donation && contents.syncToSheet !== false) {
       try {
-        ss = SpreadsheetApp.openById(contents.spreadsheetId);
-      } catch (err) {}
-    }
-
-    // 1. Locate sheet tab: check by name, or fall back to active/first sheet
-    var sheet = null;
-    if (contents.sheetName) {
-      sheet = ss.getSheetByName(contents.sheetName);
-    }
-    if (!sheet) {
-      sheet = ss.getActiveSheet() || ss.getSheets()[0];
-    }
-    if (!sheet) {
-      sheet = ss.insertSheet(contents.sheetName || "Donations_2026_27");
-    }
-
-    // Initialize headers if sheet is empty
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow([
-        "Receipt No", "Date", "Time", "Donor Name", "Phone",
-        "Email", "PAN", "Amount (INR)", "Cause", "Payment Mode",
-        "Transaction Ref", "80G Exemption", "Address", "Notes", "Logged At"
-      ]);
-      sheet.getRange(1, 1, 1, 15).setFontWeight("bold").setBackground("#E0F2FE");
-    }
-
-    // 2. ALWAYS RECORD / UPDATE DONATION IN GOOGLE SHEET
-    if (contents.donation) {
-      var d = contents.donation;
-      var receiptNo = d.receiptNo || "";
-      var existingRowIndex = -1;
-      var lastRow = sheet.getLastRow();
-
-      if (lastRow > 1 && receiptNo) {
-        var receiptColumnValues = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-        for (var r = 0; r < receiptColumnValues.length; r++) {
-          if (String(receiptColumnValues[r][0]).trim() === String(receiptNo).trim()) {
-            existingRowIndex = r + 2;
-            break;
+        var ss = SpreadsheetApp.getActiveSpreadsheet();
+        // Fallback if standalone script
+        if (!ss && contents.spreadsheetId) {
+          try {
+            ss = SpreadsheetApp.openById(contents.spreadsheetId);
+          } catch (err) { throw new Error('Unable to open the configured Google Sheet: ' + err.message); }
+        }
+    
+        if (!ss) throw new Error('Google Sheet is not linked. Configure a Spreadsheet ID for sync; email delivery is independent.');
+    
+        // 1. Locate sheet tab: check by name, or fall back to active/first sheet
+        var sheet = null;
+        if (contents.sheetName) {
+          sheet = ss.getSheetByName(contents.sheetName);
+        }
+        if (!sheet) {
+          sheet = ss.getActiveSheet() || ss.getSheets()[0];
+        }
+        if (!sheet) {
+          sheet = ss.insertSheet(contents.sheetName || "Donations_2026_27");
+        }
+    
+        // Initialize headers if sheet is empty
+        if (sheet.getLastRow() === 0) {
+          sheet.appendRow([
+            "Receipt No", "Date", "Time", "Donor Name", "Phone",
+            "Email", "PAN", "Amount (INR)", "Cause", "Payment Mode",
+            "Transaction Ref", "80G Exemption", "Address", "Notes", "Logged At"
+          ]);
+          sheet.getRange(1, 1, 1, 15).setFontWeight("bold").setBackground("#E0F2FE");
+        }
+    
+        // 2. ALWAYS RECORD / UPDATE DONATION IN GOOGLE SHEET
+        if (contents.donation) {
+          var d = contents.donation;
+          var receiptNo = d.receiptNo || "";
+          var existingRowIndex = -1;
+          var lastRow = sheet.getLastRow();
+    
+          if (lastRow > 1 && receiptNo) {
+            var receiptColumnValues = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+            for (var r = 0; r < receiptColumnValues.length; r++) {
+              if (String(receiptColumnValues[r][0]).trim() === String(receiptNo).trim()) {
+                existingRowIndex = r + 2;
+                break;
+              }
+            }
+          }
+    
+          var rowData = [
+            d.receiptNo || "",
+            d.date || Utilities.formatDate(new Date(), "Asia/Kolkata", "yyyy-MM-dd"),
+            d.time || Utilities.formatDate(new Date(), "Asia/Kolkata", "HH:mm"),
+            d.donorName || "",
+            d.donorPhone || "",
+            d.donorEmail || "",
+            d.donorPan || "",
+            d.amount || "",
+            d.cause || "",
+            d.paymentMode || "",
+            d.transactionId || "",
+            d.is80GEligible || "YES",
+            d.address || "",
+            d.notes || "",
+            d.timestamp || new Date().toISOString()
+          ];
+    
+          if (existingRowIndex > 0) {
+            sheet.getRange(existingRowIndex, 1, 1, rowData.length).setValues([rowData]);
+          } else {
+            sheet.appendRow(rowData);
           }
         }
-      }
-
-      var rowData = [
-        d.receiptNo || "",
-        d.date || Utilities.formatDate(new Date(), "Asia/Kolkata", "yyyy-MM-dd"),
-        d.time || Utilities.formatDate(new Date(), "Asia/Kolkata", "HH:mm"),
-        d.donorName || "",
-        d.donorPhone || "",
-        d.donorEmail || "",
-        d.donorPan || "",
-        d.amount || "",
-        d.cause || "",
-        d.paymentMode || "",
-        d.transactionId || "",
-        d.is80GEligible || "YES",
-        d.address || "",
-        d.notes || "",
-        d.timestamp || new Date().toISOString()
-      ];
-
-      if (existingRowIndex > 0) {
-        sheet.getRange(existingRowIndex, 1, 1, rowData.length).setValues([rowData]);
-      } else {
-        sheet.appendRow(rowData);
+    
+    
+        sheetSynced = true;
+      } catch (syncError) {
+        sheetError = String(syncError.message || syncError);
+        console.warn('Donation sheet sync failed; continuing email delivery: ' + sheetError);
       }
     }
 
@@ -130,7 +144,8 @@ function doPost(e) {
     var don = contents.donation || {};
     var recipientEmail = contents.recipientEmail || don.donorEmail;
 
-    if (recipientEmail && recipientEmail.indexOf("@") !== -1) {
+    var emailSent = false;
+    if (contents.sendEmail !== false && recipientEmail && recipientEmail.indexOf("@") !== -1) {
       var subject = contents.subject || ("Official 80G Donation Receipt [" + (don.receiptNo || "") + "] - Kulshrestha Welfare Foundation");
       var body = contents.body || (
         "Dear " + (don.donorName || "Donor") + ",\n\n" +
@@ -165,9 +180,10 @@ function doPost(e) {
       }
 
       GmailApp.sendEmail(recipientEmail, subject, body, mailOptions);
+      emailSent = true;
     }
 
-    return ContentService.createTextOutput(JSON.stringify({ status: "success", attached: !!contents.pdfBase64 }))
+    return ContentService.createTextOutput(JSON.stringify({ status: sheetError ? (emailSent ? "partial_success" : "error") : "success", emailSent: emailSent, sheetSynced: sheetSynced, sheetError: sheetError, attached: emailSent && !!contents.pdfBase64 }))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))

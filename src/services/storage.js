@@ -152,6 +152,11 @@ export const StorageService = {
       setTimeout(() => {
         this.syncToGoogleSheet(newDonation.id);
       }, 500);
+    } else if (settings.isAutoEmailReceipt !== false && newDonation.donorEmail?.trim()) {
+      // Email does not depend on whether automatic Sheets sync is enabled.
+      setTimeout(() => {
+        this.sendReceiptEmail(newDonation.id, undefined, undefined, undefined, false);
+      }, 500);
     }
 
     return newDonation;
@@ -292,6 +297,8 @@ export const StorageService = {
           htmlBody: emailContent.html,
           inlineImages: emailContent.inlineImages,
           action: 'appendDonation',
+          sendEmail: settings.isAutoEmailReceipt !== false,
+          syncToSheet: true,
           sheetName: settings.googleSheetsSheetName,
           spreadsheetId: settings.googleSheetsSpreadsheetId,
           pdfBase64: pdfBase64,
@@ -330,7 +337,9 @@ export const StorageService = {
       const now = new Date().toISOString();
       const updated = this.updateDonation(donationId, {
         googleSheetStatus: 'requested',
-        googleSheetRequestedAt: now
+        googleSheetRequestedAt: now,
+        ...(settings.isAutoEmailReceipt !== false && donation.donorEmail?.trim()
+          ? { emailStatus: 'queued', emailRequestedAt: now } : {})
       });
 
       this.addSyncLog({
@@ -397,7 +406,7 @@ export const StorageService = {
     });
   },
 
-  async sendReceiptEmail(donationId, overrideEmail, overrideSubject, overrideBody) {
+  async sendReceiptEmail(donationId, overrideEmail, overrideSubject, overrideBody, syncToSheet = true) {
     const donation = this.getDonationById(donationId);
     if (!donation) return { success: false, message: 'Donation not found' };
     const settings = this.getNgoSettings();
@@ -419,6 +428,8 @@ export const StorageService = {
       if (settings.googleSheetsWebhookUrl && settings.googleSheetsWebhookUrl.trim()) {
         const payload = {
           action: 'sendAndSync',
+          sendEmail: true,
+          syncToSheet,
           sheetName: settings.googleSheetsSheetName,
           spreadsheetId: settings.googleSheetsSpreadsheetId,
           recipientEmail: overrideEmail || donation.donorEmail,
@@ -463,6 +474,7 @@ export const StorageService = {
       return { success: true };
     } catch (err) {
       console.error('Failed to send receipt email:', err);
+      this.updateDonation(donationId, { emailStatus: 'failed', emailError: err.message });
       return { success: false, message: err.message };
     }
   },
