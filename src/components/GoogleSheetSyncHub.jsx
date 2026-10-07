@@ -88,7 +88,7 @@ export const GoogleSheetSyncHub = ({
 // -------------------------------------------------------------
 
 // Fixed organization sender; never silently fall back to a personal Gmail address.
-var KWF_SENDER_EMAIL = "info@kulshresthawf.org";
+var KWF_SENDER_EMAIL = "kulsresthawf@gmail.com";
 
 function kwfSenderOptions(senderName) {
   var options = { name: senderName, replyTo: KWF_SENDER_EMAIL };
@@ -102,7 +102,7 @@ function kwfSenderOptions(senderName) {
   }
   var accountEmail = Session.getEffectiveUser().getEmail().toLowerCase();
   if (accountEmail === KWF_SENDER_EMAIL) return options;
-  throw new Error("Sender setup required: verify info@kulshresthawf.org in Gmail Settings > Accounts and Import > Send mail as, or deploy using that Google Workspace account.");
+  throw new Error("Sender setup required: deploy this Web App with Execute as Me using the kulsresthawf@gmail.com account.");
 }
 
 function doPost(e) {

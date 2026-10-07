@@ -211,6 +211,7 @@ export const StorageService = {
       }
             const merged = { ...base, ...parsed };
       if (parsed.senderProfileRevision !== SENDER_PROFILE_REVISION) {
+        merged.googleSheetsWebhookUrl = fallbackUrl;
         merged.senderEmail = APP_CONFIG.email.fromEmail;
         merged.whatsappSenderNumber = APP_CONFIG.whatsApp.businessPhone;
         merged.senderProfileRevision = SENDER_PROFILE_REVISION;

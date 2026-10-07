@@ -30,7 +30,7 @@ export const APP_CONFIG = {
   // Replace this URL whenever you deploy a new Google Apps Script Web App!
   googleSheet: {
     // Current active Google Apps Script Web App Endpoint
-    webhookUrl: 'https://script.google.com/macros/s/AKfycbzZtwZ1sFaI3-rcDTBDpnSafg5TZNVTiquF3czUUBawqb7xTX53g0QOEA5UHM6Rl5m2Tg/exec',
+    webhookUrl: 'https://script.google.com/macros/s/AKfycbwUoZoPEJtlIiwdR8K51HsaduELV4PGZKi-yAGKMWK_dMAZ3oZ2-RvjmjFrNJhOZUJmHQ/exec',
     spreadsheetName: 'Donations_2026_27',
     sheetTabName: 'Donations_2026_27',
     autoSyncEnabled: true,
@@ -41,8 +41,8 @@ export const APP_CONFIG = {
   email: {
     provider: 'apps_script', // 'apps_script' | 'resend' | 'sendgrid' | 'smtp'
     fromName: 'Kulshrestha Welfare Foundation',
-    fromEmail: 'info@kulshresthawf.org',
-    replyTo: 'info@kulshresthawf.org',
+    fromEmail: 'kulsresthawf@gmail.com',
+    replyTo: 'kulsresthawf@gmail.com',
     // 2-Factor Authentication (OTP on email during login)
     enableLoginEmailOtp: true,
     otpExpirationMinutes: 10,
@@ -99,4 +99,4 @@ export function resolveNgoProfile(settings = {}) {
   return { ...settings, ...APP_CONFIG.ngoProfile, ngoProfileRevision: NGO_PROFILE_REVISION };
 }
 
-export const SENDER_PROFILE_REVISION = 'organization-senders-2026-10-07';
+export const SENDER_PROFILE_REVISION = 'gmail-sender-webhook-2026-10-07';

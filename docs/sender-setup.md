@@ -1,34 +1,29 @@
 # Organization sender setup
 
-Requested sender email: info@kulshresthawf.org
-Requested WhatsApp sender: +91 8826961430
+Email sender: **kulsresthawf@gmail.com**
+WhatsApp sender: **+91 8826961430**
+NGO contact email in receipts remains **info@kulshresthawf.org**.
 
-The app defaults and old cached sender settings are updated. Recipients remain the donor email/phone; these sender details never replace the recipient. The repo script and both copyable Apps Script snippets now select the verified organization sender for donation emails and login OTPs. This does not update an already deployed Apps Script automatically.
+## Current webhook
 
-## Email: finish in the account that runs Apps Script
+https://script.google.com/macros/s/AKfycbwUoZoPEJtlIiwdR8K51HsaduELV4PGZKi-yAGKMWK_dMAZ3oZ2-RvjmjFrNJhOZUJmHQ/exec
 
-1. In the Gmail account that owns the deployed Apps Script, open Settings → See all settings → Accounts and Import (or Accounts) → Send mail as → Add another email address.
-2. Add Kulshrestha Welfare Foundation and info@kulshresthawf.org. Use the mailbox provider's outgoing SMTP settings when requested. Enter mailbox credentials only in Gmail's own setup screen.
-3. Complete verification using the message received at info@kulshresthawf.org. Alternatively deploy Apps Script as the Google Workspace account whose primary email is info@kulshresthawf.org.
-4. Open the connected Google Sheet → Extensions → Apps Script. Replace the existing script with scripts/donation-email-apps-script.gs from this repository and save.
-5. Deploy → Manage deployments → Edit → New version → Deploy, keeping the existing webhook URL. The script must execute as the verified sending account.
-6. Submit an authorized test receipt to your own recipient address and inspect From, Reply-To, attachment and Apps Script execution logs. The app's no-cors request does not prove delivery.
+The app uses this URL for receipt email, Sheets sync and login OTP requests. This update migrates existing browser sender/webhook settings once, preserving other settings and donation records. Donor recipients are unchanged.
 
-If the organization sender is unavailable, the updated script returns a sender setup error instead of silently sending from a personal Gmail account. Replies are addressed to info@kulshresthawf.org. An email draft opened through mailto uses the email client/account selected on that device; it cannot enforce the sender.
+## Apps Script setup
 
-## WhatsApp: finish on the sending device
+1. Open the script using the **kulsresthawf@gmail.com** Google account.
+2. Ensure the deployed script has `var KWF_SENDER_EMAIL = "kulsresthawf@gmail.com";`. If it still says info@kulshresthawf.org, replace the script with [donation-email-apps-script.gs](../scripts/donation-email-apps-script.gs) from this repo.
+3. Save → Deploy → Manage deployments → Edit → New version → Deploy. Choose **Execute as: Me (kulsresthawf@gmail.com)** and retain the existing Web App URL.
+4. If this Gmail address is the executing account's primary email, no separate Send mail as alias is needed. The script will refuse to send from a different unverified account rather than silently using another Gmail address.
+5. Refresh the app. Check an authorized receipt email in your own inbox and Apps Script execution logs to confirm actual sender and attachment delivery. No email was sent automatically while changing this configuration.
 
-1. Use WhatsApp/WhatsApp Business registered with +91 8826961430.
-2. For desktop, link that account to WhatsApp Web using the phone's Linked devices screen.
-3. From the app open the donor receipt draft, confirm the sending account is +91 8826961430, then click Send in WhatsApp.
+Editing the repository does not change an already deployed Google Apps Script. Updating the sender constant and deploying a new version must be done in the Google account.
 
-The current integration is click-to-chat. Sender selection is controlled by the logged-in WhatsApp account. Fully automatic sending requires a separately connected WhatsApp Business Platform integration; no provider or billing setup was added by this change.
+## WhatsApp
 
-## Validation and deployment limits
+The WhatsApp sender stays +91 8826961430. Log in/link this number in WhatsApp Web/mobile before opening a donor receipt draft. The portal cannot select the sender account or automatically press Send.
 
-Mocked tests cover verified alias selection, primary account sender, unavailable sender rejection and preservation of donation/OTP recipients and receipt attachments. No real emails or WhatsApp messages are sent during validation. Mailbox alias verification, Apps Script deployment and the linked WhatsApp account cannot be confirmed from the repository.
+## Validation limits
 
-Official references:
-- https://developers.google.com/apps-script/reference/gmail/gmail-app
-- https://support.google.com/mail/answer/22370
-- https://faq.whatsapp.com/5913398998672934
+Mocked checks cover sender selection, rejection of another unverified Gmail account, preservation of recipient/PDF/HTML fields and migration of cached sender and webhook configuration. External Apps Script execution, mailbox permissions and actual delivery are not confirmed by the app's opaque no-cors response.
