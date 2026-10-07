@@ -136,10 +136,8 @@ export function generateDonationPdf(donation, settings = {}) {
     style(9.5,false);if(aa.length)doc.text(aa,left+30,y);
     style(10,true);if(bb.length)doc.text(bb,141,y);y+=height;
   }
-  if(donation.donorPan) {
-    room(9);style(8.5,true,C.muted);doc.text('Donor PAN',left,y);
-    y+=text(donation.donorPan,left+30,y,60,9.5,true)+3;
-  }
+  room(9);style(8.5,true,C.muted);doc.text('Donor PAN',left,y);
+  y+=text(String(donation.donorPan || '').trim().toUpperCase(),left+30,y,60,9.5,true)+3;
   y+=2;room(21);
   doc.setFillColor(...C.pale);doc.roundedRect(left,y,width,17,4,4,'F');
   style(9,true,C.teal);doc.text('YOUR SUPPORT CREATES REAL CHANGE',left+6,y+7);
