@@ -160,7 +160,7 @@ const DonationForm = ({
       const currentUser = StorageService.getCurrentUser();
       const createdBy = currentUser ? `${currentUser.name} (${currentUser.role})` : 'Admin Portal';
 
-      const generated = StorageService.saveDonation({
+      const saved = StorageService.saveDonation({
         date,
         time,
         donorName: donorName.trim(),
@@ -179,6 +179,8 @@ const DonationForm = ({
         notes: notes.trim(),
         createdBy
       });
+
+      const generated = StorageService.getDonationById(saved.id) || saved;
 
       // 1. AUTO-DOWNLOAD PDF ON SUBMIT
       if (autoDownloadPdf) {

@@ -28,7 +28,7 @@ export function SharedReceiptPage() {
       </header>
       {result.loading ? <p role="status" className="p-8 text-center text-sm text-slate-500">Preparing your receipt…</p> :
         result.error ? <div role="alert" className="rounded-2xl border border-rose-200 bg-white p-6"><h2 className="font-semibold text-slate-900">Receipt unavailable</h2><p className="mt-2 text-sm text-slate-600">{result.error}</p><a className="mt-4 inline-block text-sm text-sky-700 underline" href="mailto:info@kulshresthawf.org">Contact the foundation</a></div> :
-        <><iframe title="Donation receipt PDF" src={result.url} className="h-[75vh] min-h-[480px] w-full rounded-xl border border-slate-200 bg-white" /><p className="mt-3 text-center text-xs text-slate-500">This shared copy omits donor contact details, PAN, address and transaction reference. Use Download PDF if the preview is not visible.</p></>}
+        <>{result.donation.sharedReceiptIncomplete && <p role="alert" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">This older receipt link omits some donor details. Please request a new WhatsApp receipt link from the foundation for the complete PDF.</p>}<iframe title="Donation receipt PDF" src={result.url} className="h-[75vh] min-h-[480px] w-full rounded-xl border border-slate-200 bg-white" /><p className="mt-3 text-center text-xs text-slate-500">Use Download PDF if the preview is not visible. Keep your personal receipt link private.</p></>}
     </div>
   </main>;
 }

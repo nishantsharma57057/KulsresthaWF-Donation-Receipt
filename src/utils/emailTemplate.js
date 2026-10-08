@@ -1,12 +1,9 @@
-import { receiptLogo } from '../assets/receiptLogo';
-import { trusteeSignature } from '../assets/trusteeSignature';
 import { resolveNgoProfile } from '../config/appConfig';
 import { numberToIndianWords } from './numberToWords';
 
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const value = v => String(v ?? '').trim() || '—';
 const date = v => /^\d{4}-\d{2}-\d{2}$/.test(v || '') ? new Date(v+'T12:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : value(v);
-const inlineImage = data => ({ mimeType:'image/png', data:data.split(',')[1] });
 
 export function buildDonationEmail(donation, inputSettings = {}, customMessage) {
   const settings = resolveNgoProfile(inputSettings);
@@ -25,7 +22,7 @@ export function buildDonationEmail(donation, inputSettings = {}, customMessage) 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f7fa;"><tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #cfe6f0;border-radius:16px;overflow:hidden;">
 <tr><td style="background:#eef9fc;padding:28px 28px 24px;border-top:5px solid #3db7d3;">
-<img src="cid:receiptLogo" width="300" alt="${e(settings.orgName)}" style="display:block;width:100%;max-width:300px;height:auto;">
+<p style="margin:0;font-family:Montserrat,Arial,sans-serif;font-size:22px;line-height:1.4;font-weight:700;color:#143c52;">${e(settings.orgName)}</p>
 <p style="margin:18px 0 0;font-size:10px;letter-spacing:1px;font-weight:600;color:#1385a6;">CARE · DIGNITY · OPPORTUNITY · IMPACT</p>
 <h1 style="margin:24px 0 8px;font-family:Montserrat,Arial,sans-serif;font-size:26px;line-height:1.3;color:#143c52;">DONATION <span style="color:#1385a6;">RECEIPT</span></h1>
 <p style="margin:0;font-size:13px;color:#6b7f90;">Thank you for your generous support.</p></td></tr>
@@ -43,10 +40,9 @@ export function buildDonationEmail(donation, inputSettings = {}, customMessage) 
 <div style="margin:24px 0;padding:16px;border-radius:10px;background:#eef9fc;"><p style="margin:0 0 6px;font-size:11px;font-weight:600;color:#1385a6;">YOUR SUPPORT CREATES REAL CHANGE</p><p style="margin:0;font-size:12px;line-height:1.7;">Every contribution brings a brighter tomorrow closer.</p></div>
 <h2 style="font-family:Montserrat,Arial,sans-serif;font-size:13px;color:#143c52;">FOUNDATION DETAILS</h2>
 <p style="font-size:12px;line-height:1.8;color:#52657b;">${e(settings.orgName)}<br>${e(office)}<br>Mobile: ${e(settings.phone)}<br><a href="mailto:${e(settings.email)}" style="color:#1385a6;">${e(settings.email)}</a><br><a href="https://${e(String(settings.website).replace(/^https?:\/\//,''))}" style="color:#1385a6;">${e(settings.website)}</a><br>PAN: ${e(settings.pan)}<br>Registration No.: ${e(settings.cin)}</p>
-<img src="cid:trusteeSignature" width="150" alt="Authorized signatory signature" style="display:block;width:150px;height:auto;margin-top:24px;">
+<p style="margin:24px 0 0;font-size:11px;color:#6b7f90;">The signed official receipt is attached as a PDF.</p>
 <p style="margin:8px 0 4px;font-size:13px;font-weight:600;">${e(settings.signatoryName)}</p><p style="margin:0;font-size:11px;color:#6b7f90;">${e(settings.signatoryTitle)} · Authorized Signatory</p>
 </td></tr><tr><td style="padding:20px 28px;background:#1385a6;color:#fff;"><p style="margin:0;font-size:10px;line-height:1.8;letter-spacing:.3px;">PEOPLE · CARE · OPPORTUNITIES · BRIGHTER TOMORROWS</p><p style="margin:8px 0 0;font-size:10px;">${e(donation.receiptNo)} · Computer generated acknowledgement</p></td></tr>
 </table></td></tr></table></body></html>`;
-  return { subject, message, text, html, previewHtml:html.replaceAll('cid:receiptLogo',receiptLogo).replaceAll('cid:trusteeSignature',trusteeSignature),
-    inlineImages:{receiptLogo:inlineImage(receiptLogo),trusteeSignature:inlineImage(trusteeSignature)} };
+  return { subject, message, text, html, previewHtml: html };
 }

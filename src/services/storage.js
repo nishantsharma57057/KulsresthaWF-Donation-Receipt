@@ -324,7 +324,6 @@ export const StorageService = {
           subject: emailContent.subject,
           body: emailContent.text,
           htmlBody: emailContent.html,
-          inlineImages: emailContent.inlineImages,
           action: 'appendDonation',
           sendEmail: settings.isAutoEmailReceipt !== false,
           syncToSheet: true,
@@ -465,7 +464,6 @@ export const StorageService = {
           subject: overrideSubject || emailContent.subject,
           body: emailContent.text,
           htmlBody: emailContent.html,
-          inlineImages: emailContent.inlineImages,
           pdfBase64: pdfBase64,
           pdfFileName: `Receipt_${donation.receiptNo}.pdf`,
           donation: {

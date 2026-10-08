@@ -1,10 +1,11 @@
 const APP_URL = 'https://kulsrestha-wf-donation-receipt.vercel.app';
-const fields = ['receiptNo','date','time','donorName','amount','cause','paymentMode'];
+const fields = ['receiptNo','date','time','donorName','donorPhone','donorEmail','donorPan','donorAddress','donorCity','donorState','donorPincode','amount','cause','paymentMode','transactionId'];
 
 export function getReceiptShareUrl(donation) {
-  // Only receipt fields are shared. The fragment stays in the recipient's browser;
-  // opening a receipt never queries the private donations collection.
+  // Include the full donor receipt for its recipient. The fragment stays in the browser;
+  // opening it does not query the private donations collection.
   const snapshot = Object.fromEntries(fields.map(key => [key, donation[key] ?? '']));
+  snapshot.version = 2;
   const bytes = new TextEncoder().encode(JSON.stringify(snapshot));
   const encoded = btoa(Array.from(bytes, byte => String.fromCharCode(byte)).join(''))
     .replaceAll('+','-').replaceAll('/','_').replace(/=+$/,'');
@@ -21,5 +22,5 @@ export function readSharedReceipt(location) {
   if (fields.some(key => key !== 'amount' && (typeof receipt[key] !== 'string' || receipt[key].length > 4000))) throw new Error('Invalid receipt details.');
   const number = new URLSearchParams(location.search).get('no');
   if (!receipt.receiptNo || (number && number !== receipt.receiptNo) || typeof receipt.amount !== 'number' || !Number.isFinite(receipt.amount) || receipt.amount < 0) throw new Error('Invalid receipt link.');
-  return receipt;
+  return { ...receipt, sharedReceiptIncomplete: parsed.version !== 2 };
 }
