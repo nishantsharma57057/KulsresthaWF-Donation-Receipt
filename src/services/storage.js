@@ -190,10 +190,16 @@ export const StorageService = {
     const changes = Object.fromEntries(allowed.map(key => [key, String(details[key] ?? original[key] ?? '').trim()]));
     changes.donorPan = changes.donorPan.toUpperCase();
     if (!changes.donorName || !changes.donorPhone) throw new Error('Donor name and phone are required.');
-    if (changes.donorEmail && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(changes.donorEmail)) throw new Error('Enter a valid email address.');
+    if (changes.donorEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(changes.donorEmail)) throw new Error('Enter a valid email address.');
     if (changes.donorPan && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(changes.donorPan)) throw new Error('Enter a valid PAN or leave it empty.');
+    const amount = Number(details.amount ?? original.amount);
+    if (!Number.isFinite(amount) || amount <= 0 || !Number.isSafeInteger(Math.round(amount * 100)) || Math.abs(amount * 100 - Math.round(amount * 100)) > 0.000001) {
+      throw new Error('Enter a valid donation amount greater than zero, with up to two decimal places.');
+    }
     const updated = {
       ...original, ...changes,
+      amount,
+      amountInWords: numberToIndianWords(amount),
       id: original.id, receiptNo: original.receiptNo,
       donorDetailsUpdatedAt: new Date().toISOString(),
       googleSheetStatus: 'pending'

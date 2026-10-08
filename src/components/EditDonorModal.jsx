@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, Save } from 'lucide-react';
+import { numberToIndianWords } from '../utils/numberToWords';
 import { StorageService } from '../services/storage';
 
 const fields = [
+  ['amount', 'Donation amount (INR)', 'number', true],
   ['donorName', 'Donor name', 'text', true],
   ['donorPhone', 'Phone / WhatsApp', 'tel', true],
   ['donorEmail', 'Email', 'email', false],
@@ -46,6 +48,11 @@ export function EditDonorModal({ donation, onClose, onSaved }) {
     event.preventDefault();
     if (busy.current) return;
     const clean = Object.fromEntries(fields.map(([key]) => [key, String(values[key]).trim()]));
+    const amount = Number(clean.amount);
+    if (!Number.isFinite(amount) || amount <= 0 || !Number.isSafeInteger(Math.round(amount * 100)) || Math.abs(amount * 100 - Math.round(amount * 100)) > 0.000001) {
+      setError('Enter a valid donation amount greater than zero, with up to two decimal places.'); return;
+    }
+    clean.amount = amount;
     clean.donorPan = clean.donorPan.toUpperCase();
     if (!clean.donorName || !clean.donorPhone) { setError('Donor name and phone are required.'); return; }
     if (clean.donorPan && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(clean.donorPan)) { setError('Enter a valid PAN or leave it empty.'); return; }
@@ -78,9 +85,10 @@ export function EditDonorModal({ donation, onClose, onSaved }) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {fields.map(([key, label, type, required]) => (
               <label key={key} className={`block text-xs font-semibold text-slate-600 ${key === 'donorAddress' ? 'sm:col-span-2' : ''}`}>{label}{required ? ' *' : ''}
-                <input type={type} required={required} disabled={saving} value={values[key]} maxLength={key === 'donorPan' ? 10 : undefined}
+                <input type={type} min={key === 'amount' ? '0.01' : undefined} step={key === 'amount' ? '0.01' : undefined} required={required} disabled={saving} value={values[key]} maxLength={key === 'donorPan' ? 10 : undefined}
                   onChange={event => setValues(current => ({ ...current, [key]: key === 'donorPan' ? event.target.value.toUpperCase() : event.target.value }))}
                   className="mt-2 block w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-50" />
+                {key === 'amount' && Number(values.amount) > 0 && Number.isSafeInteger(Math.round(Number(values.amount) * 100)) && <span className="mt-1.5 block text-xs font-normal text-slate-500">{numberToIndianWords(Number(values.amount))}</span>}
               </label>
             ))}
           </div>
