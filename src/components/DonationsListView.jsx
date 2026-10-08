@@ -1,3 +1,4 @@
+import { EditDonorModal } from './EditDonorModal';
 import React, { useState, useMemo } from 'react';
 import { DonationActionsMenu } from './DonationActionsMenu';
 import { StorageService } from '../services/storage';
@@ -20,7 +21,8 @@ import {
   X,
   Heart,
   IndianRupee,
-  Clock3
+  Clock3,
+  Pencil
 } from 'lucide-react';
 
 export const DonationsListView = ({
@@ -33,6 +35,9 @@ export const DonationsListView = ({
   onDonationUpdated,
   onSyncSingle
 }) => {
+  const [editingDonation, setEditingDonation] = useState(null);
+  const [editNotice, setEditNotice] = useState('');
+  const closeDonorEditor = React.useCallback(() => setEditingDonation(null), []);
   const [searchTerm, setSearchTerm] = useState('');
   const [causeFilter, setCauseFilter] = useState('all');
   const [modeFilter, setModeFilter] = useState('all');
@@ -111,6 +116,12 @@ export const DonationsListView = ({
   return (
     <div className="kwf-donations space-y-5 pb-12 font-sans">
       
+      {editNotice && <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{editNotice}</p>}
+      {editingDonation && <EditDonorModal key={editingDonation.id} donation={editingDonation} onClose={closeDonorEditor} onSaved={updated => {
+        setEditingDonation(null);
+        setEditNotice('Donor details saved. Receipt ' + updated.receiptNo + ' is unchanged.');
+        onDonationUpdated();
+      }} />}
       {/* Header Bar */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
@@ -364,6 +375,7 @@ export const DonationsListView = ({
                     {/* Row Actions */}
                     <td className="py-3 px-4 text-right whitespace-nowrap">
                       <DonationActionsMenu receiptNo={d.receiptNo} actions={[
+                        { label: 'Edit donor details', icon: Pencil, run: () => { setEditNotice(''); setEditingDonation(d); } },
                         { label: 'View receipt', icon: Eye, run: () => onSelectDonation(d) },
                         { label: 'Download PDF', icon: Download, run: () => downloadDonationPdf(d, settings) },
                         { label: 'Print receipt', icon: Printer, run: () => printDonationReceipt(d, settings) },

@@ -165,7 +165,9 @@ export const StorageService = {
 
     const updated = {
       ...donations[idx],
-      ...updates
+      ...updates,
+      id: donations[idx].id,
+      receiptNo: donations[idx].receiptNo
     };
 
     if (updates.amount && updates.amount !== donations[idx].amount) {
@@ -178,6 +180,31 @@ export const StorageService = {
     // Save update to Firebase
     FirestoreService.saveDonation(updated).catch(console.warn);
 
+    return updated;
+  },
+
+  async updateDonorDetails(id, details) {
+    const original = this.getDonationById(id);
+    if (!original) throw new Error('Donation not found');
+    const allowed = ['donorName', 'donorPhone', 'donorEmail', 'donorPan', 'donorAddress', 'donorCity', 'donorState', 'donorPincode'];
+    const changes = Object.fromEntries(allowed.map(key => [key, String(details[key] ?? original[key] ?? '').trim()]));
+    changes.donorPan = changes.donorPan.toUpperCase();
+    if (!changes.donorName || !changes.donorPhone) throw new Error('Donor name and phone are required.');
+    if (changes.donorEmail && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(changes.donorEmail)) throw new Error('Enter a valid email address.');
+    if (changes.donorPan && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(changes.donorPan)) throw new Error('Enter a valid PAN or leave it empty.');
+    const updated = {
+      ...original, ...changes,
+      id: original.id, receiptNo: original.receiptNo,
+      donorDetailsUpdatedAt: new Date().toISOString(),
+      googleSheetStatus: 'pending'
+    };
+    // Confirm persistence before reporting a successful edit. Do not issue a new receipt or send messages.
+    await FirestoreService.saveDonation(updated);
+    const latest = this.getDonations();
+    const index = latest.findIndex(record => record.id === original.id);
+    if (index >= 0) latest[index] = updated;
+    else latest.unshift(updated);
+    localStorage.setItem(DONATIONS_KEY, JSON.stringify(latest));
     return updated;
   },
 
